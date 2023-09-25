@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    {% load i18n %}
+    {% load static %}
+
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <link rel="stylesheet" media="all" href="{% static 'style.css' %}">
+        <title>{% trans 'Emma Dog Grooming' %}</title>
+    </head>
+
+    <body>
+
+        <div id="container">
+
+            <div id="header">
+                <div id="header_left">
+                    <table>
+                        <tr>
+                            <td>
+                                <img id="logo_image" src="{% static 'logo.jpg' %}">
+                            </td>
+                            <td>
+                                <p id="logo_text">{% trans 'Emma Dog Grooming Salon' %}</p>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="header_right">
+                    <table>
+                        <tr>
+                            <td>
+                                <span><a href=""><img class="lang_image" src="{% static 'hun.png' %}"></a></span>
+                            </td>
+                            <td>
+                                <span><a href=""><img class="lang_image" src="{% static 'uk.png' %}"></a></span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div id="topnav">
+                <a class="menu_item" href="">{% trans 'Home' %}</a>
+                <a class="menu_item" href="">{% trans 'Services' %}</a>
+                <a class="menu_item" href="">{% trans 'Gallery' %}</a>
+                <a class="menu_item" href="">{% trans 'Contact' %}</a>
+                <a class="menu_item_right" href="">{% trans 'Log In' %}</a>
+                <a class="menu_item_right" href="">{% trans 'Sign Up' %}</a>
+            </div>
+
+            <div id="content_wrapper">
+
+                {% block 'content' %}
+                {% endblock %}
+
+            </div>
+
+            <div id="footer">
+                <footer>Copyright &copy; <script>document.write(new Date().getFullYear())</script> {% trans 'All Rights Reserved' %}</footer>
+            </div>
+
+        </div>
+
+    </body>
+
+</html>

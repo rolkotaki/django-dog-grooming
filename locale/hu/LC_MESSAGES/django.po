@@ -1,0 +1,92 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-09-26 00:01+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: dog_grooming_app/forms.py:8
+msgid "Username"
+msgstr "Felhasználónév"
+
+#: dog_grooming_app/forms.py:9
+msgid "Password"
+msgstr "Jelszó"
+
+#: dog_grooming_app/forms.py:13
+msgid "First name"
+msgstr "Keresztnév"
+
+#: dog_grooming_app/forms.py:14
+msgid "Last name"
+msgstr "Családnév"
+
+#: dog_grooming_app/forms.py:16
+msgid "Phone number"
+msgstr "Telefonszám"
+
+#: dog_grooming_app/templates/base.html:12
+msgid "Emma Dog Grooming"
+msgstr "Emma Kutyakozmetika"
+
+#: dog_grooming_app/templates/base.html:27
+msgid "Emma Dog Grooming Salon"
+msgstr "Emma Kutyakozmetika Szalon"
+
+#: dog_grooming_app/templates/base.html:47
+msgid "Home"
+msgstr "Kezdőlap"
+
+#: dog_grooming_app/templates/base.html:48
+msgid "Services"
+msgstr "Szolgáltatások"
+
+#: dog_grooming_app/templates/base.html:49
+msgid "Gallery"
+msgstr "Galéria"
+
+#: dog_grooming_app/templates/base.html:50
+msgid "Contact"
+msgstr "Kapcsolat"
+
+#: dog_grooming_app/templates/base.html:51
+#: dog_grooming_app/templates/login.html:11
+#: dog_grooming_app/templates/login.html:28
+msgid "Log In"
+msgstr "Bejelentkezés"
+
+#: dog_grooming_app/templates/base.html:52
+#: dog_grooming_app/templates/login.html:29
+#: dog_grooming_app/templates/signup.html:11
+#: dog_grooming_app/templates/signup.html:28
+msgid "Sign Up"
+msgstr "Regisztráció"
+
+#: dog_grooming_app/templates/base.html:63
+msgid "All Rights Reserved"
+msgstr "Minden Jog Fenntartva"
+
+#: dog_grooming_app/views.py:45
+msgid "Invalid username or password!"
+msgstr "Helytelen felhasználónév vagy jelszó!"
+
+#: dog_grooming_salon/settings.py:159
+msgid "English"
+msgstr "Angol"
+
+#: dog_grooming_salon/settings.py:160
+msgid "Hungarian"
+msgstr "Magyar"

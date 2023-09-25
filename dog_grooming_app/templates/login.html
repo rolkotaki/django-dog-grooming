@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block 'content' %}
+
+{% load i18n %}
+{% load extra_filters %}
+
+<div class="content content_login_signup">
+
+    <div class="content_form">
+
+        <p class="page_title">{% trans 'Log In' %}</p>
+        <form class="login_signup_form" method="POST" novalidate>
+            {% csrf_token %}
+            {% for field in form %}
+                <p>
+                    {{ field.label_tag }} {{ field|add_class:"login_signup_text_input" }}
+                    {% if field.errors %}
+                        <ul class="error_list">
+                            {% for error in field.errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </p>
+            {% endfor %}
+
+            <div class="form_buttons">
+                <input class="a_button input_button" type="submit" value="{% trans 'Log In' %}" />
+                <a class="a_button" href="">{% trans 'Sign Up' %}</a>
+            </div>
+        </form>
+
+        <div class="login_signup_errors">
+            {% if messages %}
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
