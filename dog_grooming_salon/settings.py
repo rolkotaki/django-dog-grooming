@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -157,3 +158,6 @@ LANGUAGES = (
     ('en', _('English')),
     ('hu', _('Hungarian')),
 )
+
+MEDIA_ROOT = os.path.abspath(os.path.join(BASE_DIR, 'dog_grooming_app', 'media'))
+MEDIA_URL = '/media/'

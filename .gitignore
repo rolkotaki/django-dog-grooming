@@ -2,3 +2,6 @@
 __pycache__
 env
 config.yml
+dog_grooming_app/media/services/*
+!.gitkeep
+
