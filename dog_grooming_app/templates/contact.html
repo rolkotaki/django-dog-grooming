@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block 'content' %}
+
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+<div class="content content_contact">
+
+    <div class="contact_details">
+        <p class="page_title">{% trans 'Contact' %}</p>
+        <table class="contact_table" cellspacing="0" cellpadding="0">
+            <tr>
+                <td>{% trans 'Phone number:' %}</td>
+                <td>{{ contact_details.phone_number }}</td>
+            </tr>
+            <tr>
+                <td>Email:</td>
+                <td>{{ contact_details.email }}</td>
+            </tr>
+            <tr>
+                <td>{% trans 'Address:' %}</td>
+                <td>{{ contact_details.address }}</td>
+            </tr>
+            <tr>
+                <td>{% trans 'Opening hours:' %}</td>
+                <td>
+                    {% if CURRENT_LANGUAGE == 'hu' %}
+                        {{ contact_details.opening_hours_hu }}
+                    {% else %}
+                        {{ contact_details.opening_hours_en }}
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        <div class="contact_button">
+            <input class="a_button input_button" type="submit" value="{% trans 'Call Me Back' %}" />
+        </div>
+        <iframe width="400" height="240" src="{{ contact_details.google_maps_url }}" class="contact_map" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+</div>
+
+{% endblock %}

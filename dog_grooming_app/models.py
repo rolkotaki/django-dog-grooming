@@ -20,6 +20,7 @@ class Contact(models.Model):
     address = models.CharField(max_length=300, null=False)
     opening_hours_en = models.CharField(max_length=150, null=False)
     opening_hours_hu = models.CharField(max_length=150, null=False)
+    google_maps_url = models.CharField(max_length=500, null=False)
 
     def save(self, *args, **kwargs):
         """

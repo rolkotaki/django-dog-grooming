@@ -6,6 +6,7 @@ from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
 from .serializers import ContactSerializer, ServiceSerializer, ServiceUpdateDeleteSerializer
 from .models import Contact, Service
@@ -24,7 +25,7 @@ class ContactCreate(CreateAPIView):
         try:
             return super().create(request, *args, **kwargs)
         except IntegrityError:
-            raise APIException("The contact information already exist, please update the existing one!")
+            raise APIException(_("The contact information already exist, please update the existing one!"))
 
 
 class ContactRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
@@ -55,9 +56,9 @@ class ServiceCreate(CreateAPIView):
                 price = request.data.get(price_field)
                 if price is not None and price != '':
                     if int(price) <= 0:
-                        raise ValidationError({price_field: 'Price be greater than zero!'})
+                        raise ValidationError({price_field: _("Price be greater than zero!")})
         except ValueError:
-            raise ValidationError({field_with_error: 'A valid number is required!'})
+            raise ValidationError({field_with_error: _("A valid number is required!")})
         return super().create(request, *args, **kwargs)
 
 

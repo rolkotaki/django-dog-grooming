@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block 'content' %}
+
+{% load static %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+<div class="content content_services">
+
+    {% for service in services %}
+
+    <div class="service_box">
+        <a href="{% url 'service' service_id=service.id %}"><span>
+            <img class="service_box_image"
+                 src="
+                    {% if service.photo.url is not None and service.photo.url != '' %}
+                        {{ service.photo.url }}
+                    {% else %}
+                        {% static 'logo.jpg' %}
+                    {% endif %}
+                 ">
+            <p class="service_box_name">
+                {% if CURRENT_LANGUAGE == 'hu' %}
+                    {{ service.service_name_hu }}
+                {% else %}
+                    {{ service.service_name_en }}
+                {% endif %}
+            </p>
+            <p class="service_box_desc">
+                {% if CURRENT_LANGUAGE == 'hu' %}
+                    {{ service.service_description_hu }}
+                {% else %}
+                    {{ service.service_description_en }}
+                {% endif %}
+            </p>
+        </span></a>
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

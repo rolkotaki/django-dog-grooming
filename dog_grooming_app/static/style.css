@@ -69,16 +69,6 @@ html, body {
   //z-index: 999;  // *****
 }
 
-#topnav ul {
-  display: inline;
-  list-style-type: none;
-}
-
-#topnav li {
-  float: left;
-  text-align: center;
-}
-
 #topnav a {
   float: left;
   color: #f2f2f2;
@@ -102,10 +92,46 @@ html, body {
   float: right;
 }
 
-//.active_nav_menu {
-//  background-color: #4CAF50;
-//  color: white;
+.dropdown_button {
+  font-size: 16px;
+  border: none;
+  outline: none;
+  color: #f2f2f2;
+  padding: 14px 16px;
+  background-color: inherit;
+  font-family: inherit;
+  margin: 0;
+}
+
+#user_dropdown a:hover, #user_dropdown:hover .dropdown_button {
+  background-color: #ddd;
+  color: black;
+}
+
+#user_dropdown_content {
+  display: none;
+  position: absolute;
+  background-color: #f9f9f9;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+#user_dropdown_content a {
+  float: none;
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+  text-align: left;
+  font-size: 15px;
+}
+
+//#user_dropdown_content a:hover {
+//  background-color: #ddd;
 //}
+
+#user_dropdown:hover #user_dropdown_content {
+  display: block;
+}
 
 #footer {
 	position: relative;
@@ -114,14 +140,10 @@ html, body {
 }
 
 #content_wrapper {
-    //display: flex;
     display: flex;
     overflow: auto;
     flex: auto;
-    //align-items: left;
-    //align-items: center;
     margin: 5px 0px;
-    //background-color: grey;
 }
 
 .content {
@@ -130,22 +152,23 @@ html, body {
     margin: 20px;
 }
 
-.content_products {
+.content_services {
     margin-top: 40px;
 }
 
-.product_box {
+.service_box {
     width: 225px;
     height: 280px;
     padding: 10px;
+    padding-bottom: 35px;
 }
 
-.product_box a {
-    color: inherit; /* blue colors for links too */
-    text-decoration: inherit; /* no underline */
+.service_box a {
+    color: inherit;
+    text-decoration: inherit;
 }
 
-.product_box_image {
+.service_box_image {
     max-width: 225px;
     max-height: 200px;
     height: auto;
@@ -154,7 +177,7 @@ html, body {
     padding: 0px;
 }
 
-.product_box_name {
+.service_box_name {
     font-weight: bold;
     font-size: 16px;
     text-align: center;
@@ -163,7 +186,7 @@ html, body {
     white-space: nowrap;
 }
 
-.product_box_desc {
+.service_box_desc {
     text-align: left;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -172,18 +195,18 @@ html, body {
     text-overflow: ellipsis;
 }
 
-.content_product, .content_booking, .content_login_signup, .content_contact {
+.content_service, .content_booking, .content_user_form, .content_contact {
     margin: 20px auto;
     text-align: center;
 }
 
-.product {
+.service {
     width: 500px;
     //height: 280px;
     padding: 10px;
 }
 
-.product_name, .page_title {
+.service_name, .page_title {
     font-weight: bold;
     font-size: 20px;
     text-align: left;
@@ -192,7 +215,7 @@ html, body {
     white-space: nowrap;
 }
 
-.product_image {
+.service_image {
     max-width: 400px;
     max-height: 400px;
     height: auto;
@@ -201,15 +224,15 @@ html, body {
     padding: 0px 0px 20px 0px;
 }
 
-.product_price, .product_desc, .service_time {
+.service_price, .service_desc, .service_time {
     text-align: left;
 }
 
-.product_option {
+.service_option {
     text-align: left;
 }
 
-.product_buttons {
+.service_buttons {
     display: block;
     padding-top: 20px;
 }
@@ -223,6 +246,8 @@ html, body {
     text-decoration: none;
     display: inline-block;
     margin-right: 5px;
+    font-size: 16px;
+    font-family: inherit;
 }
 
 .back_button {
@@ -240,7 +265,7 @@ html, body {
 }
 
 .content_form {
-    width: 270px;
+    width: 280px;
     padding: 10px;
     text-align: left;
 }
@@ -250,7 +275,7 @@ html, body {
 }
 
 .input_button {
-    padding: 12px 22px 11px 22px;
+    font-family: "Times New Roman";
 }
 
 .form_buttons {
@@ -266,13 +291,12 @@ html, body {
     margin-bottom: 10px;
 }
 
-.login_signup_form {
-    width: 270px;
+.user_form {
+    width: 280px;
 }
 
-.login_signup_form .login_signup_text_input {
-    width: 250px;
-    //margin-bottom: 10px;
+.user_form .user_form_text_input {
+    width: 260px;
 }
 
 .booking_form .date_input {
@@ -281,7 +305,6 @@ html, body {
 }
 
 .login_signup_errors {
-    //float: left;
     color: red;
     text-align: center;
     padding-top: 20px;
@@ -292,9 +315,7 @@ html, body {
 }
 
 .contact_details {
-    //display: grid;
     width: 400px;
-
 }
 
 .contact_table {
@@ -315,3 +336,12 @@ html, body {
     border:0;
 }
 
+.italic {
+    font-style: italic;
+}
+
+.form_success_message {
+    color: green;
+    text-align: center;
+    padding-top: 20px;
+}

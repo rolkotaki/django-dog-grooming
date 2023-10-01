@@ -10,7 +10,7 @@ class ContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Contact
-        fields = ('phone_number', 'email', 'address', 'opening_hours_en', 'opening_hours_hu')
+        fields = ('phone_number', 'email', 'address', 'opening_hours_en', 'opening_hours_hu', 'google_maps_url')
 
 
 class ServiceSerializer(serializers.ModelSerializer):

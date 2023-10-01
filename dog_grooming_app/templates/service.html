@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block 'content' %}
+
+{% load static %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+<div class="content content_service">
+
+    <div class="service">
+        <p class="service_name">
+            {% if CURRENT_LANGUAGE == 'hu' %}
+                {{ service.service_name_hu }}
+            {% else %}
+                {{ service.service_name_en }}
+            {% endif %}
+        </p>
+        <img class="service_image"
+             src="
+                {% if service.photo.url is not None and service.photo.url != '' %}
+                    {{ service.photo.url }}
+                {% else %}
+                    {% static 'logo.jpg' %}
+                {% endif %}
+             "
+        >
+        {% if service.price_small is not None or service.price_big is not None %}
+            <div class="service_option" >
+                <label for="dog_size">{% trans 'Dog size:' %}</label>
+                <select name="dog_size" id="dog_size" >
+                    {% if service.price_small is not None %}<option value="small">{% trans 'small' %}</option>{% endif %}
+                    <option selected="selected" value="medium">{% trans 'medium' %}</option>
+                    {% if service.price_big is not None %}<option value="big">{% trans 'big' %}</option>{% endif %}
+                </select>
+            </div>
+        {% endif %}
+        <p id="default_price" class="service_price">{{ service.price_default }} Ft</p>
+        <p id="small_price" style="display:none;" class="service_price">{{ service.price_small }} Ft</p>
+        <p id="big_price" style="display:none;" class="service_price">{{ service.price_big }} Ft</p>
+        <p class="service_desc">
+                {% if CURRENT_LANGUAGE == 'hu' %}
+                    {{ service.service_description_hu }}
+                {% else %}
+                    {{ service.service_description_en }}
+                {% endif %}
+        </p>
+        <p class="service_time">
+            {% blocktranslate with max_duration=service.max_duration%}
+                Max time: {{ max_duration }} minutes
+            {% endblocktranslate %}
+        </p>
+        <div class="service_buttons">
+            <a class="a_button" href=""
+                {% if not user.is_authenticated %}
+                    style="pointer-events: none;opacity: 0.60;"
+                {% endif %}>{% trans 'Book' %}
+            </a>
+            <a class="a_button back_button" onclick="history.back()">{% trans 'Back' %}</a>
+        </div>
+        {% if not user.is_authenticated %}
+        <p class="italic">{% trans 'Log in to book!' %}</p>
+        {% endif %}
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -4,16 +4,16 @@
 {% load i18n %}
 {% load extra_filters %}
 
-<div class="content content_login_signup">
+<div class="content content_user_form">
 
     <div class="content_form">
 
         <p class="page_title">{% trans 'Sign Up' %}</p>
-        <form class="login_signup_form" method="POST" novalidate>
+        <form class="user_form" method="POST" novalidate>
             {% csrf_token %}
             {% for field in form %}
                 <p>
-                    {{ field.label_tag }} {{ field|add_class:"login_signup_text_input" }}
+                    {{ field.label_tag }} {{ field|add_class:"user_form_text_input" }}
                     {% if field.errors %}
                     <ul class="error_list">
                         {% for error in field.errors %}

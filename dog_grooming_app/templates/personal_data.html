@@ -8,32 +8,34 @@
 
     <div class="content_form">
 
-        <p class="page_title">{% trans 'Log In' %}</p>
+        <p class="page_title">{% trans 'Personal Data' %}</p>
         <form class="user_form" method="POST" novalidate>
             {% csrf_token %}
             {% for field in form %}
                 <p>
                     {{ field.label_tag }} {{ field|add_class:"user_form_text_input" }}
                     {% if field.errors %}
-                        <ul class="error_list">
-                            {% for error in field.errors %}
-                                <li>{{ error }}</li>
-                            {% endfor %}
-                        </ul>
+                    <ul class="error_list">
+                        {% for error in field.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
                     {% endif %}
                 </p>
             {% endfor %}
 
             <div class="form_buttons">
-                <input class="a_button input_button" type="submit" value="{% trans 'Log In' %}" />
-                <a class="a_button" href="{% url 'signup' %}">{% trans 'Sign Up' %}</a>
+                <input class="a_button input_button" type="submit" value="{% trans 'Update' %}" />
+                <a class="a_button back_button" onclick="history.back()">{% trans 'Back' %}</a>
             </div>
         </form>
 
-        <div class="login_signup_errors">
+        <div class="form_success_message">
             {% if messages %}
                 {% for message in messages %}
+                {% if message.tags == 'success' %}
                     {{ message }}
+                {% endif %}
                 {% endfor %}
             {% endif %}
         </div>
