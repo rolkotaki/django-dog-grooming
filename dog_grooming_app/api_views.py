@@ -5,6 +5,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAdminUser
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
@@ -17,6 +19,8 @@ class ContactCreate(CreateAPIView):
     API view class to create the Contact details.
     """
     serializer_class = ContactSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
 
     def create(self, request, *args, **kwargs):
         """
@@ -35,6 +39,8 @@ class ContactRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = Contact.objects.all()
     lookup_field = 'id'
     serializer_class = ContactSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
 
 
 class ServiceCreate(CreateAPIView):
@@ -42,6 +48,8 @@ class ServiceCreate(CreateAPIView):
     API view class to create a new Service.
     """
     serializer_class = ServiceSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
 
     def create(self, request, *args, **kwargs):
         """
@@ -80,6 +88,8 @@ class ServiceList(ListAPIView):
     filter_fields = ('id',)
     search_fields = ('service_name_hu', 'service_description_hu')
     pagination_class = ServicePagination
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
 
     def get_queryset(self):
         """
@@ -101,3 +111,5 @@ class ServiceRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     queryset = Service.objects.all()
     lookup_field = 'id'
     serializer_class = ServiceUpdateDeleteSerializer
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]

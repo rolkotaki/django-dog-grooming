@@ -1,8 +1,9 @@
 from django.conf.urls.static import static
 from django.conf import settings
-
 from django.urls import path, include
+
 from . import views, api_views
+
 
 urlpatterns = [
     path('', views.HomePage.as_view(), name='home'),
@@ -15,9 +16,12 @@ urlpatterns = [
     path('signup', views.sign_up, name='signup'),
     path('change_password', views.CustomPasswordChangeView.as_view(), name='change_password'),
     path('personal_data', views.personal_data, name='personal_data'),
-    path('api/admin/contact/create', api_views.ContactCreate.as_view()),
-    path('api/admin/contact/update_delete/<str:id>/', api_views.ContactRetrieveUpdateDestroy.as_view()),
-    path('api/admin/services', api_views.ServiceList.as_view()),
-    path('api/admin/service/create', api_views.ServiceCreate.as_view()),
-    path('api/admin/service/update_delete/<int:id>/', api_views.ServiceRetrieveUpdateDestroy.as_view()),
+    path('admin_api', views.admin_api_page, name='admin_api'),
+    path('api/admin/contact/create', api_views.ContactCreate.as_view(), name='api_contact_create'),
+    path('api/admin/contact/update_delete/<str:id>/', api_views.ContactRetrieveUpdateDestroy.as_view(),
+         name='api_contact_update_delete'),
+    path('api/admin/services', api_views.ServiceList.as_view(), name='api_services'),
+    path('api/admin/service/create', api_views.ServiceCreate.as_view(), name='api_service_create'),
+    path('api/admin/service/update_delete/<int:id>/', api_views.ServiceRetrieveUpdateDestroy.as_view(),
+         name='api_service_update_delete'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

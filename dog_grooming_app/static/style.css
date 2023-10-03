@@ -359,6 +359,7 @@ html, body {
   padding: 3px;
   margin: 5px;
   border-style: groove;
+  cursor: pointer;
 }
 
 .image_in_box {
@@ -408,4 +409,45 @@ html, body {
   cursor: pointer;
   background-color: red;
   padding: 5px 12px;
+}
+
+.green_button {
+  background-color: green;
+  color: white;
+  border: 2px solid green;
+}
+
+.blue_button {
+  background-color: blue;
+  color: white;
+  border: 2px solid blue;
+}
+
+.red_button {
+  background-color: red;
+  color: white;
+  border: 2px solid red;
+}
+
+.green_button:hover, .green_button:active {
+  background-color: white;
+  color: green;
+}
+
+.blue_button:hover, .blue_button:active {
+  background-color: white;
+  color: blue;
+}
+
+.red_button:hover, .red_button:active {
+  background-color: white;
+  color: red;
+}
+
+.div_admin_api {
+  text-align: left;
+}
+
+.admin_service_list {
+  width: 250px;
 }

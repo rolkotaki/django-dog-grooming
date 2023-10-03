@@ -5,6 +5,9 @@ from django.contrib.auth import login, authenticate
 from django.shortcuts import redirect, render
 from django.contrib import messages
 from django.conf import settings
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.utils.translation import gettext_lazy as _
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm
@@ -52,13 +55,17 @@ def login_user(request):
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
             if user is not None:
-                login(request, user)
-                return redirect('home')
+                if user.is_active:
+                    login(request, user)
+                    return redirect('home')
+                else:
+                    messages.error(request, _("The user is not active!"))
             else:
                 messages.error(request, _("Invalid username or password!"))
         return render(request, "login.html", {'form': form})
 
 
+@login_required(login_url='login')
 def personal_data(request):
     """
     View method for the personal data.
@@ -150,9 +157,16 @@ class ServicePage(TemplateView):
         return context
 
 
-class CustomPasswordChangeView(PasswordChangeView):
+class CustomPasswordChangeView(PasswordChangeView, LoginRequiredMixin):
     """
     View class for the password change. It inherits from the Django's PasswordChangeView,
     only the success url is changed.
     """
     success_url = '/'
+    login_url = 'login'
+
+
+@staff_member_required()
+def admin_api_page(request):
+    services = Service.objects.order_by('id')
+    return render(request, "admin_api.html", {'services': services})
