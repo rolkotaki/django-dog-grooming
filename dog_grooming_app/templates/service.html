@@ -27,16 +27,16 @@
         {% if service.price_small is not None or service.price_big is not None %}
             <div class="service_option" >
                 <label for="dog_size">{% trans 'Dog size:' %}</label>
-                <select name="dog_size" id="dog_size" >
+                <select name="dog_size" id="dog_size" onchange="changePrice(this)">
                     {% if service.price_small is not None %}<option value="small">{% trans 'small' %}</option>{% endif %}
-                    <option selected="selected" value="medium">{% trans 'medium' %}</option>
+                    <option value="medium" selected >{% trans 'medium' %}</option>
                     {% if service.price_big is not None %}<option value="big">{% trans 'big' %}</option>{% endif %}
                 </select>
             </div>
         {% endif %}
-        <p id="default_price" class="service_price">{{ service.price_default }} Ft</p>
-        <p id="small_price" style="display:none;" class="service_price">{{ service.price_small }} Ft</p>
-        <p id="big_price" style="display:none;" class="service_price">{{ service.price_big }} Ft</p>
+        <p id="medium" class="service_price">{{ service.price_default }} Ft</p>
+        <p id="small" style="display:none;" class="service_price">{{ service.price_small }} Ft</p>
+        <p id="big" style="display:none;" class="service_price">{{ service.price_big }} Ft</p>
         <p class="service_desc">
                 {% if CURRENT_LANGUAGE == 'hu' %}
                     {{ service.service_description_hu }}
@@ -53,7 +53,8 @@
             <a class="a_button" href=""
                 {% if not user.is_authenticated %}
                     style="pointer-events: none;opacity: 0.60;"
-                {% endif %}>{% trans 'Book' %}
+                {% endif %}>
+                {% trans 'Book' %}
             </a>
             <a class="a_button back_button" onclick="history.back()">{% trans 'Back' %}</a>
         </div>
@@ -64,5 +65,15 @@
     </div>
 
 </div>
+
+<script>
+    function changePrice(element) {
+        var value = element.value
+        document.getElementById("small").style.display = "none";
+        document.getElementById("medium").style.display = "none";
+        document.getElementById("big").style.display = "none";
+        document.getElementById(value).style.display = "block";
+    }
+</script>
 
 {% endblock %}

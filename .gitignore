@@ -3,5 +3,5 @@ __pycache__
 env
 config.yml
 dog_grooming_app/media/services/*
+dog_grooming_app/media/gallery/*
 !.gitkeep
-

@@ -1,43 +1,43 @@
 html, body {
-    min-height: 100vh;
-    margin: 0px;
-    padding: 0px;
+  min-height: 100vh;
+  margin: 0px;
+  padding: 0px;
 }
 
 #container {
-    display: flex;
-    flex-flow: column;
-    max-width: 1024px;
-    margin: auto;
-    position: relative;
-    text-align: center;
-    min-height: 100vh;
+  display: flex;
+  flex-flow: column;
+  max-width: 1024px;
+  margin: auto;
+  position: relative;
+  text-align: center;
+  min-height: 100vh;
 }
 
 #header {
-    top: 0px;
-    left: 0;
-    height: 60px;
-    display: flex;
-    overflow: hidden;
-    align-items: center;
-    margin: 0px;
-    padding: 0px;
+  top: 0px;
+  left: 0;
+  height: 60px;
+  display: flex;
+  overflow: hidden;
+  align-items: center;
+  margin: 0px;
+  padding: 0px;
 }
 
 #header_left {
-    margin-right: auto;
-    margin-left: 0px;
-    padding: 0px;
+  margin-right: auto;
+  margin-left: 0px;
+  padding: 0px;
 }
 
 #header_right {
-    margin-right: 5px;
+  margin-right: 5px;
 }
 
 #header_left table, #header_left tr, #header_left td {
-    margin: 0px;
-    padding: 0px;
+  margin: 0px;
+  padding: 0px;
 }
 
 #logo_image {
@@ -57,8 +57,8 @@ html, body {
 }
 
 .lang_image {
-    width: 25px;
-    height: auto;
+  width: 25px;
+  height: auto;
 }
 
 #topnav {
@@ -66,7 +66,7 @@ html, body {
   overflow: hidden;
   top: 60px;
   left: 0;
-  //z-index: 999;  // *****
+  //z-index: 999;
 }
 
 #topnav a {
@@ -134,214 +134,278 @@ html, body {
 }
 
 #footer {
-	position: relative;
-	margin: 8px;
-	text-align: center;
+  position: relative;
+  margin: 8px;
+  text-align: center;
 }
 
 #content_wrapper {
-    display: flex;
-    overflow: auto;
-    flex: auto;
-    margin: 5px 0px;
+  display: flex;
+  overflow: auto;
+  flex: auto;
+  margin: 5px 0px;
 }
 
 .content {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  margin: 20px;
 }
 
 .content_services {
-    margin-top: 40px;
+  margin-top: 40px;
 }
 
 .service_box {
-    width: 225px;
-    height: 280px;
-    padding: 10px;
-    padding-bottom: 35px;
+  width: 225px;
+  height: 280px;
+  padding: 10px;
+  padding-bottom: 35px;
 }
 
 .service_box a {
-    color: inherit;
-    text-decoration: inherit;
+  color: inherit;
+  text-decoration: inherit;
 }
 
 .service_box_image {
-    max-width: 225px;
-    max-height: 200px;
-    height: auto;
-    width: auto;
-    margin: 0px;
-    padding: 0px;
+  max-width: 225px;
+  max-height: 200px;
+  height: auto;
+  width: auto;
+  margin: 0px;
+  padding: 0px;
 }
 
 .service_box_name {
-    font-weight: bold;
-    font-size: 16px;
-    text-align: center;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .service_box_desc {
-    text-align: left;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .content_service, .content_booking, .content_user_form, .content_contact {
-    margin: 20px auto;
-    text-align: center;
+  margin: 20px auto;
+  text-align: center;
 }
 
 .service {
-    width: 500px;
-    //height: 280px;
-    padding: 10px;
+  width: 500px;
+  //height: 280px;
+  padding: 10px;
 }
 
 .service_name, .page_title {
-    font-weight: bold;
-    font-size: 20px;
-    text-align: left;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    white-space: nowrap;
+  font-weight: bold;
+  font-size: 20px;
+  text-align: left;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .service_image {
-    max-width: 400px;
-    max-height: 400px;
-    height: auto;
-    width: auto;
-    margin: auto;
-    padding: 0px 0px 20px 0px;
+  max-width: 400px;
+  max-height: 400px;
+  height: auto;
+  width: auto;
+  margin: auto;
+  padding: 0px 0px 20px 0px;
 }
 
 .service_price, .service_desc, .service_time {
-    text-align: left;
+  text-align: left;
 }
 
 .service_option {
-    text-align: left;
+  text-align: left;
 }
 
 .service_buttons {
-    display: block;
-    padding-top: 20px;
+  display: block;
+  padding-top: 20px;
 }
 
 .a_button {
-    background-color: white;
-    color: black;
-    border: 2px solid green;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    margin-right: 5px;
-    font-size: 16px;
-    font-family: inherit;
+  background-color: white;
+  color: black;
+  border: 2px solid green;
+  padding: 10px 20px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  margin-right: 5px;
+  font-size: 16px;
+  font-family: inherit;
 }
 
 .back_button {
-    border: 2px solid #333;
+  border: 2px solid #333;
 }
 
 .a_button:hover, .a_button:active {
-    background-color: green;
-    color: white;
+  background-color: green;
+  color: white;
 }
 
 .back_button:hover, .back_button:active {
-    background-color: grey;
-    color: white;
+  background-color: grey;
+  color: white;
 }
 
 .content_form {
-    width: 280px;
-    padding: 10px;
-    text-align: left;
+  width: 280px;
+  padding: 10px;
+  text-align: left;
 }
 
 .content_booking_form {
-    width: 520px;
+  width: 520px;
 }
 
 .input_button {
-    font-family: "Times New Roman";
+  font-family: "Times New Roman";
 }
 
 .form_buttons {
-    text-align: center;
+  text-align: center;
 }
 
 .booking_form {
-    //width: 520px;
+  //width: 520px;
 }
 
 .booking_form .text_input {
-    width: 500px;
-    margin-bottom: 10px;
+  width: 500px;
+  margin-bottom: 10px;
 }
 
 .user_form {
-    width: 280px;
+  width: 280px;
 }
 
 .user_form .user_form_text_input {
-    width: 260px;
+  width: 260px;
 }
 
 .booking_form .date_input {
-    width: 160px;
-    margin-bottom: 10px;
+  width: 160px;
+  margin-bottom: 10px;
 }
 
 .login_signup_errors {
-    color: red;
-    text-align: center;
-    padding-top: 20px;
+  color: red;
+  text-align: center;
+  padding-top: 20px;
 }
 
 .error_list {
-    color: red;
+  color: red;
 }
 
 .contact_details {
-    width: 400px;
+  width: 400px;
 }
 
 .contact_table {
-    text-align: left;
-    padding-bottom: 25px;
+  text-align: left;
+  padding-bottom: 25px;
 }
 
 .contact_table td {
-    padding: 0px 50px 15px 0px;
+  padding: 0px 50px 15px 0px;
 }
 
 .contact_button {
-    margin-top: -20px;
-    padding-bottom: 25px;
+  margin-top: -20px;
+  padding-bottom: 25px;
 }
 
 .contact_map {
-    border:0;
+  border:0;
 }
 
 .italic {
-    font-style: italic;
+  font-style: italic;
 }
 
 .form_success_message {
-    color: green;
-    text-align: center;
-    padding-top: 20px;
+  color: green;
+  text-align: center;
+  padding-top: 20px;
+}
+
+.content_gallery {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: start;
+  margin: 20px 15px;
+}
+
+.image_box {
+  width: 225px;
+  height: 170px;
+  padding: 3px;
+  margin: 5px;
+  border-style: groove;
+}
+
+.image_in_box {
+  max-width: 225px;
+  max-height: 170px;
+  height: auto;
+  width: auto;
+  margin: 0px;
+  padding: 0px;
+}
+
+#expanded_image_container {
+  position: absolute;
+  top: 130px;
+  left: 0;
+  right: 0;
+  height: 100%;
+  width: 1024px;
+  display: none;
+  z-index: 9;
+}
+
+#expanded_image_sticky {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding-top: 5px;
+  height: auto;
+  width: 1024px;
+  background-color: black;
+}
+
+#expanded_image {
+  max-width: 1024px;
+  width: auto;
+  height: auto;
+  margin: auto;
+}
+
+.close_sign {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  color: white;
+  font-size: 35px;
+  cursor: pointer;
+  background-color: red;
+  padding: 5px 12px;
 }

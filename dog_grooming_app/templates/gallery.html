@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block 'content' %}
+
+{% load i18n %}
+{% load static %}
+
+<div class="content_gallery">
+
+    {% for image in images %}
+        <div class="image_box">
+            <img class="image_in_box" src="{% get_media_prefix %}gallery/{{ image }}" onclick="displayImage(this);">
+        </div>
+    {% endfor %}
+
+</div>
+
+<div id="expanded_image_container">
+    <div>
+        <div id="expanded_image_sticky">
+            <span onclick="this.parentElement.parentElement.parentElement.style.display='none'"
+                  class="close_sign">&times;</span>
+            <img id="expanded_image">
+        </div>
+    </div>
+</div>
+
+<script>
+    function displayImage(img) {
+        var expandedImage = document.getElementById("expanded_image");
+        expandedImage.src = img.src;
+        expandedImage.parentElement.parentElement.parentElement.style.display = "grid";
+    }
+</script>
+
+{% endblock %}

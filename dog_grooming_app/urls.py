@@ -7,6 +7,7 @@ from . import views, api_views
 urlpatterns = [
     path('', views.HomePage.as_view(), name='home'),
     path('contact', views.ContactPage.as_view(), name='contact'),
+    path('gallery', views.GalleryPage.as_view(), name='gallery'),
     path('services', views.ServiceListPage.as_view(), name='services'),
     path('service/<int:service_id>', views.ServicePage.as_view(), name='service'),
     path('user/', include("django.contrib.auth.urls")),

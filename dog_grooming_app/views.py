@@ -1,8 +1,10 @@
+import os
 from django.contrib.auth.views import PasswordChangeView
 from django.views.generic import TemplateView
 from django.contrib.auth import login, authenticate
 from django.shortcuts import redirect, render
 from django.contrib import messages
+from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm
@@ -98,6 +100,23 @@ class ContactPage(TemplateView):
         """
         context = super().get_context_data(**kwargs)
         context["contact_details"] = Contact.objects.get(id='x')
+        return context
+
+
+class GalleryPage(TemplateView):
+    """
+    View class for the gallery.
+    """
+    template_name = "gallery.html"
+
+    def get_context_data(self, **kwargs):
+        """
+        Overriding the get_context_data method to add the image list from the gallery folder.
+        """
+        context = super().get_context_data(**kwargs)
+        images = os.listdir(os.path.join(settings.MEDIA_ROOT, 'gallery'))
+        images.remove('.gitkeep')
+        context["images"] = images
         return context
 
 

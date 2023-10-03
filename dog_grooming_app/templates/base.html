@@ -3,6 +3,7 @@
 
     {% load i18n %}
     {% load static %}
+<!--    {% load -->
 
     <head>
         <meta charset="utf-8">
@@ -46,7 +47,7 @@
             <div id="topnav">
                 <a class="menu_item" href="{% url 'home' %}">{% trans 'Home' %}</a>
                 <a class="menu_item" href="{% url 'services' %}">{% trans 'Services' %}</a>
-                <a class="menu_item" href="">{% trans 'Gallery' %}</a>
+                <a class="menu_item" href="{% url 'gallery' %}">{% trans 'Gallery' %}</a>
                 <a class="menu_item" href="{% url 'contact' %}">{% trans 'Contact' %}</a>
                 {% if user.is_authenticated %}
                 <div id="user_dropdown" class="menu_item_right">
