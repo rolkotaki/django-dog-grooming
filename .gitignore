@@ -4,4 +4,5 @@ env
 config.yml
 dog_grooming_app/media/services/*
 dog_grooming_app/media/gallery/*
+!dog_grooming_app/media/services/default.jpg
 !.gitkeep

@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
@@ -46,10 +48,34 @@ class Service(models.Model):
     photo = models.ImageField(blank=False, null=False, upload_to='services')
     active = models.BooleanField(default=True)
 
+    def _validate_price(self, field_name, value):
+        """
+        Validates that the prices are positive integers.
+        """
+        try:
+            if value is not None and value != '':
+                if int(value) <= 0:
+                    raise ValidationError({field_name: _("Price must be greater than zero!")})
+            elif field_name == 'price_default':  # meaning it is empty
+                raise ValidationError({field_name: _("Default price must not be empty!")})
+        except ValueError:
+            raise ValidationError({field_name: _("A valid number is required!")})
+
+    def clean(self):
+        """
+        Overrides the clean method to validate that prices.
+        """
+        super().clean()
+        self._validate_price('price_default', self.price_default)
+        self._validate_price('price_small', self.price_small)
+        self._validate_price('price_big', self.price_big)
+
     def save(self, *args, **kwargs):
         """
-        Overriding the save method to keep the existing photo if the user does not provide it during the update.
+        Overriding the save method to keep the existing photo if the user does not provide it during the update
+        and to validate the prices.
         """
+        self.clean()
         if self.photo.name is None or self.photo.name == '':
             self.photo = Service.objects.get(id=self.id).photo
         super().save(*args, **kwargs)

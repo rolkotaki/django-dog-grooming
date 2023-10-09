@@ -64,7 +64,9 @@ class ServiceCreate(CreateAPIView):
                 price = request.data.get(price_field)
                 if price is not None and price != '':
                     if int(price) <= 0:
-                        raise ValidationError({price_field: _("Price be greater than zero!")})
+                        raise ValidationError({price_field: _("Price must be greater than zero!")})
+                elif price_field == 'price_default':  # meaning it is empty
+                    raise ValidationError({price_field: _("Default price must not be empty!")})
         except ValueError:
             raise ValidationError({field_with_error: _("A valid number is required!")})
         return super().create(request, *args, **kwargs)
@@ -113,3 +115,23 @@ class ServiceRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):
     serializer_class = ServiceUpdateDeleteSerializer
     authentication_classes = [SessionAuthentication, BasicAuthentication]
     permission_classes = [IsAdminUser]
+
+    def update(self, request, *args, **kwargs):
+        """
+        Overrides the update method to validate that the prices are positive integers
+        and at least the default is not empty.
+        """
+        field_with_error = 'price_default'
+        try:
+            price_list = ['price_default', 'price_small', 'price_big']
+            for price_field in price_list:
+                field_with_error = price_field
+                price = request.data.get(price_field)
+                if price is not None and price != '':
+                    if int(price) <= 0:
+                        raise ValidationError({price_field: _("Price must be greater than zero!")})
+                elif price_field == 'price_default':  # meaning it is empty
+                    raise ValidationError({price_field: _("Default price must not be empty!")})
+        except ValueError:
+            raise ValidationError({field_with_error: _("A valid number is required!")})
+        return super().update(request, *args, **kwargs)

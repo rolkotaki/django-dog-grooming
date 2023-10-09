@@ -89,6 +89,9 @@ DATABASES = {
         'PASSWORD': load_config('postgresql_password'),
         'HOST': 'localhost',
         'PORT': '5432',
+        'TEST': {
+            'NAME': 'dog_grooming_website_test'
+        }
     }
 }
 
