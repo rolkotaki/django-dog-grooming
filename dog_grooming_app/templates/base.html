@@ -60,7 +60,7 @@
                         {% if user.is_staff %}
                             <a href="">{% trans 'Bookings' %}</a>
                         {% else %}
-                            <a href="">{% trans 'My bookings' %}</a>
+                            <a href="{% url 'user_bookings' %}">{% trans 'My bookings' %}</a>
                         {% endif %}
                         <a href="user/logout">{% trans 'Log out' %}</a>
                     </div>

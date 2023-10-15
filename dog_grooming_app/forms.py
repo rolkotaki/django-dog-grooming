@@ -1,7 +1,8 @@
-from .models import CustomUser
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.utils.translation import gettext_lazy as _
+
+from .models import CustomUser, Booking
 
 
 class LoginForm(forms.Form):
@@ -38,3 +39,33 @@ class PersonalDataForm(forms.Form):
     class Meta:
         model = CustomUser
         fields = ['first_name', 'last_name', 'email', 'phone_number']
+
+
+class BookingForm(forms.Form):
+    """
+    Booking form class.
+    """
+    dog_size = forms.CharField(widget=forms.Select(attrs={'id': 'dog_size', 'name': 'dog_size'}),
+                               label=_('Time:'), required=False)
+    date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date', 'class': 'date_input',
+                                                         'id': 'date', 'name': 'date'}),
+                           label=_('Date:'))
+    time = forms.CharField(widget=forms.Select(attrs={'class': 'time_input', 'id': 'time', 'name': 'time'}),
+                           label=_('Time:'))
+    comment = forms.CharField(widget=forms.Textarea(attrs={'rows': '7', 'maxlength': '500',
+                                                           'placeholder': _('Please tell us the breed of your dog and the required things to do ...'),
+                                                           'id': 'comment', 'name': 'comment', 'class': 'text_input'}),
+                              label=_('Comment:'))
+
+    def __init__(self, *args, **kwargs):
+        """
+        Overriding the constructor to load the initial times in the dropdown list for the default day.
+        """
+        free_booking_slots = kwargs.pop('free_booking_slots', None)
+        super().__init__(*args, **kwargs)
+        if free_booking_slots:
+            self.fields['time'].widget.choices = free_booking_slots
+
+    class Meta:
+        model = Booking
+        fields = ['date', 'time', 'comment']

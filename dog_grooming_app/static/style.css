@@ -2,6 +2,7 @@ html, body {
   min-height: 100vh;
   margin: 0px;
   padding: 0px;
+  font-family: "Open Sans",sans-serif;
 }
 
 #container {
@@ -50,7 +51,8 @@ html, body {
 
 #logo_text {
   margin-left: 20px;
-  font-family: cursive;
+  //font-family: cursive;
+  font-family: copperplate;
   font-weight: bold;
   font-size: 24px;
   text-align: center;
@@ -62,7 +64,7 @@ html, body {
 }
 
 #topnav {
-  background-color: #333;
+  background-color: #1C6EA4;
   overflow: hidden;
   top: 60px;
   left: 0;
@@ -99,7 +101,6 @@ html, body {
   color: #f2f2f2;
   padding: 14px 16px;
   background-color: inherit;
-  font-family: inherit;
   margin: 0;
 }
 
@@ -125,10 +126,6 @@ html, body {
   font-size: 15px;
 }
 
-//#user_dropdown_content a:hover {
-//  background-color: #ddd;
-//}
-
 #user_dropdown:hover #user_dropdown_content {
   display: block;
 }
@@ -152,7 +149,7 @@ html, body {
   margin: 20px;
 }
 
-.content_services {
+.content_services, .content_user_bookings {
   margin-top: 40px;
 }
 
@@ -247,7 +244,6 @@ html, body {
   display: inline-block;
   margin-right: 5px;
   font-size: 16px;
-  font-family: inherit;
 }
 
 .back_button {
@@ -274,10 +270,6 @@ html, body {
   width: 520px;
 }
 
-.input_button {
-  font-family: "Times New Roman";
-}
-
 .form_buttons {
   text-align: center;
 }
@@ -301,7 +293,11 @@ html, body {
 
 .booking_form .date_input {
   width: 160px;
-  margin-bottom: 10px;
+}
+
+.booking_form .time_input {
+  width: 120px;
+  height: 22px;
 }
 
 .login_signup_errors {
@@ -325,6 +321,18 @@ html, body {
 
 .contact_table td {
   padding: 0px 50px 15px 0px;
+}
+
+.table_opening_hours {
+  padding: 0px;
+  margin: 0px;
+  white-space:nowrap;
+}
+
+.table_opening_hours td {
+  padding: 0px;
+  margin: 0px;
+  padding-right: 8px;
 }
 
 .contact_button {
@@ -450,4 +458,10 @@ html, body {
 
 .admin_service_list {
   width: 250px;
+}
+
+.user_booking_box {
+  width: 225px;
+  height: 320px;
+  padding: 10px;
 }

@@ -1,4 +1,5 @@
 import os
+import datetime
 from django.contrib.auth.views import PasswordChangeView
 from django.views.generic import TemplateView
 from django.contrib.auth import login, authenticate
@@ -8,10 +9,12 @@ from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
 
-from .forms import SignUpForm, LoginForm, PersonalDataForm
-from .models import Contact, Service, CustomUser
+from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
+from .models import Contact, Service, CustomUser, Booking
+from .utils import get_free_booking_slots
 
 
 class HomePage(TemplateView):
@@ -106,7 +109,10 @@ class ContactPage(TemplateView):
         Overriding the get_context_data method to add the Contact object.
         """
         context = super().get_context_data(**kwargs)
-        context["contact_details"] = Contact.objects.get(id='x')
+        try:
+            context["contact_details"] = Contact.objects.get(id='x')
+        except Contact.DoesNotExist:
+            context["contact_details"] = None
         return context
 
 
@@ -157,7 +163,7 @@ class ServicePage(TemplateView):
         return context
 
 
-class CustomPasswordChangeView(PasswordChangeView, LoginRequiredMixin):
+class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
     """
     View class for the password change. It inherits from the Django's PasswordChangeView,
     only the success url is changed.
@@ -169,4 +175,59 @@ class CustomPasswordChangeView(PasswordChangeView, LoginRequiredMixin):
 @staff_member_required()
 def admin_api_page(request):
     services = Service.objects.order_by('id')
-    return render(request, "admin_api.html", {'services': services})
+    active_services = Service.objects.filter(active=True).order_by('id')
+    return render(request, "admin_api.html", {'services': services, 'active_services': active_services})
+
+
+@login_required(login_url='login')
+def booking(request, service_id):
+    """
+    View method for the booking.
+    """
+    service = Service.objects.get(id=service_id)
+    free_booking_slots = get_free_booking_slots(datetime.date.today() + datetime.timedelta(days=1), service.id)
+    if request.method == 'GET':
+        form = BookingForm(free_booking_slots=free_booking_slots)
+        return render(request, "booking.html", {'form': form, 'service': service})
+
+    if request.method == 'POST':
+        form = BookingForm(request.POST)
+        if form.is_valid():
+            user = CustomUser.objects.get(id=request.user.id)
+            dog_size = form.cleaned_data['dog_size']
+            service_price = int(service.price_default if dog_size == 'medium' or dog_size == ''
+                                else service.price_small if dog_size == 'small' else service.price_big)
+            booking_data = {
+                'user': user,
+                'service': service,
+                'dog_size': dog_size,
+                'service_price': service_price,
+                'date': form.cleaned_data['date'],
+                'time': form.cleaned_data['time'],
+                'comment': form.cleaned_data['comment']
+            }
+            booking = Booking.objects.create(**booking_data)
+            booking.save()
+            messages.success(request, _("Your booking has been successful."))
+            return redirect('booking', service_id=service.id)
+        form = BookingForm(request.POST, free_booking_slots=free_booking_slots)
+        return render(request, "booking.html", {'form': form, 'service': service})
+
+
+class UserBookingsPage(LoginRequiredMixin, TemplateView):
+    """
+    View class for the user booking list.
+    """
+    template_name = "user_bookings.html"
+    login_url = 'login'
+
+    def get_context_data(self, **kwargs):
+        """
+        Overriding the get_context_data method to add the list of active Bookings.
+        """
+        context = super().get_context_data(**kwargs)
+        booking_filter = Q(cancelled=False) & Q(user=self.request.user.id) & \
+                          (Q(date__gt=datetime.date.today()) |
+                           (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
+        context["bookings"] = Booking.objects.filter(booking_filter)
+        return context

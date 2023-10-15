@@ -24,11 +24,78 @@
             <tr>
                 <td>{% trans 'Opening hours:' %}</td>
                 <td>
-                    {% if CURRENT_LANGUAGE == 'hu' %}
-                        {{ contact_details.opening_hours_hu }}
-                    {% else %}
-                        {{ contact_details.opening_hours_en }}
-                    {% endif %}
+                    <table class="table_opening_hours">
+                        <tr>
+                            <td>{% trans 'Monday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_monday and contact_details.closing_hour_monday %}
+                                    {{ contact_details.opening_hour_monday }} - {{ contact_details.closing_hour_monday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans 'Tuesday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_tuesday and contact_details.closing_hour_tuesday %}
+                                    {{ contact_details.opening_hour_tuesday }} - {{ contact_details.closing_hour_tuesday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans 'Wednesday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_wednesday and contact_details.closing_hour_wednesday %}
+                                    {{ contact_details.opening_hour_wednesday }} - {{ contact_details.closing_hour_wednesday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans 'Thursday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_thursday and contact_details.closing_hour_thursday %}
+                                    {{ contact_details.opening_hour_thursday }} - {{ contact_details.closing_hour_thursday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans 'Friday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_friday and contact_details.closing_hour_friday %}
+                                    {{ contact_details.opening_hour_friday }} - {{ contact_details.closing_hour_friday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans 'Saturday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_saturday and contact_details.closing_hour_saturday %}
+                                    {{ contact_details.opening_hour_saturday }} - {{ contact_details.closing_hour_saturday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>{% trans 'Sunday:' %}</td>
+                            <td>
+                                {% if contact_details.opening_hour_sunday and contact_details.closing_hour_sunday %}
+                                     {{ contact_details.opening_hour_sunday }} - {{ contact_details.closing_hour_sunday }}
+                                {% else %}
+                                    {% trans 'closed' %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
         </table>

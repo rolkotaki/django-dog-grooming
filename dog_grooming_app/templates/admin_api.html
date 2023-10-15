@@ -23,10 +23,26 @@
             <br><br>
             <a id="service_update_delete_button" class="a_button red_button" >
                 {% trans 'Update/Delete' %}</a>
-            <select name="dog_size" id="dog_size" onchange="setAPIUrl(this)" class="admin_service_list">
+            <select onchange="setServiceAPIUrl(this)" class="admin_service_list">
                 <option value="none" >{% trans 'Choose a service!' %}</option>
                 {% for service in services %}
                     <option value="{{ service.id }}" >{{ service.id }} - {{ service.service_name_hu }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <p>{% trans 'Bookings:' %}</p>
+        <div>
+            <a class="a_button green_button" href="{% url 'api_booking_create' %}">{% trans 'Create' %}</a>
+            <a class="a_button blue_button" href="{% url 'api_bookings' %}">{% trans 'View' %}</a>
+            <br><br>
+            <a id="free_booking_slots_button" class="a_button blue_button" >
+                {% trans 'List Free Slots' %}</a>
+            <input type="date" class="date_input" id="date" name="date" onchange="setBookingAPIUrl()"/>
+            <select id="service_list" onchange="setBookingAPIUrl()" class="admin_service_list">
+                <option value="none" >{% trans 'Choose a service!' %}</option>
+                {% for active_service in active_services %}
+                    <option value="{{ active_service.id }}" >{{ active_service.id }} - {{ active_service.service_name_hu }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -36,12 +52,30 @@
 </div>
 
 <script>
-    function setAPIUrl(element) {
+    document.getElementById("date").min = new Date().toISOString().split("T")[0];
+    document.getElementById("date").value = new Date().toISOString().split("T")[0];
+    max_date = new Date()
+    max_date.setDate(max_date.getDate() + 90)
+    document.getElementById("date").max = max_date.toISOString().split("T")[0];
+</script>
+<script>
+    function setServiceAPIUrl(element) {
         var serviceUpdateDeleteButton = document.getElementById("service_update_delete_button");
         if (element.value != "none") {
             serviceUpdateDeleteButton.href = "api/admin/service/update_delete/" + element.value + "/";
         } else {
             serviceUpdateDeleteButton.href = "";
+        }
+    }
+
+    function setBookingAPIUrl() {
+        var listFreeBookingSlotsButton = document.getElementById("free_booking_slots_button");
+        var dateInput = document.getElementById("date");
+        var serviceInput = document.getElementById("service_list");
+        if (serviceInput.value != "none") {
+            listFreeBookingSlotsButton.href = "api/booking/free_booking_slots?day=" + dateInput.value + "&service_id=" + serviceInput.value;
+        } else {
+            listFreeBookingSlotsButton.href = "";
         }
     }
 </script>

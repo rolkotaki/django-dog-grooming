@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block 'content' %}
+
+{% load static %}
+{% load i18n %}
+{% get_current_language as CURRENT_LANGUAGE %}
+
+<div class="content content_user_bookings">
+
+    {% for booking in bookings %}
+
+    <div class="user_booking_box">
+        <img class="service_box_image"
+             src="
+                {% if booking.service.photo.url is not None and booking.service.photo.url != '' %}
+                    {{ booking.service.photo.url }}
+                {% else %}
+                    {% static 'logo.jpg' %}
+                {% endif %}
+             ">
+            <p class="service_box_name">
+                {% if CURRENT_LANGUAGE == 'hu' %}
+                    {{ booking.service.service_name_hu }}
+                {% else %}
+                    {{ booking.service.service_name_en }}
+                {% endif %}
+            </p>
+            <p>
+                {% blocktranslate with max_duration=service.max_duration%}
+                    Duration: {{ max_duration }} minutes
+                {% endblocktranslate %}
+            </p>
+            <p>{{ booking.date}} {{ booking.time }}</p>
+            <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}">{% trans 'Cancel' %}</a>
+    </div>
+
+    {% endfor %}
+
+</div>
+
+{% endblock %}

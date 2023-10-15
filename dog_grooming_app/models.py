@@ -20,8 +20,20 @@ class Contact(models.Model):
     phone_number = models.CharField(max_length=20, null=False)
     email = models.EmailField(max_length=150, null=False)
     address = models.CharField(max_length=300, null=False)
-    opening_hours_en = models.CharField(max_length=150, null=False)
-    opening_hours_hu = models.CharField(max_length=150, null=False)
+    opening_hour_monday = models.TimeField(null=True)
+    closing_hour_monday = models.TimeField(null=True)
+    opening_hour_tuesday = models.TimeField(null=True)
+    closing_hour_tuesday = models.TimeField(null=True)
+    opening_hour_wednesday = models.TimeField(null=True)
+    closing_hour_wednesday = models.TimeField(null=True)
+    opening_hour_thursday = models.TimeField(null=True)
+    closing_hour_thursday = models.TimeField(null=True)
+    opening_hour_friday = models.TimeField(null=True)
+    closing_hour_friday = models.TimeField(null=True)
+    opening_hour_saturday = models.TimeField(null=True)
+    closing_hour_saturday = models.TimeField(null=True)
+    opening_hour_sunday = models.TimeField(null=True)
+    closing_hour_sunday = models.TimeField(null=True)
     google_maps_url = models.CharField(max_length=500, null=False)
 
     def save(self, *args, **kwargs):
@@ -79,3 +91,19 @@ class Service(models.Model):
         if self.photo.name is None or self.photo.name == '':
             self.photo = Service.objects.get(id=self.id).photo
         super().save(*args, **kwargs)
+
+
+class Booking(models.Model):
+    """
+    Booking model.
+    """
+    id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.DO_NOTHING)
+    service = models.ForeignKey(Service, on_delete=models.DO_NOTHING)
+    dog_size = models.CharField(null=True)
+    service_price = models.IntegerField(null=False)  # it can change in the meanwhile, so I save the one when booked
+    date = models.DateField(null=False, auto_now=False)
+    time = models.TimeField(null=False, auto_now=False)
+    comment = models.TextField(null=False)
+    cancelled = models.BooleanField(default=False)
+    booking_date = models.DateTimeField(null=False, auto_now_add=True)

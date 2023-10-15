@@ -50,7 +50,7 @@
             {% endblocktranslate %}
         </p>
         <div class="service_buttons">
-            <a class="a_button" href=""
+            <a class="a_button" href="{% url 'booking' service_id=service.id %}"
                 {% if not user.is_authenticated %}
                     style="pointer-events: none;opacity: 0.60;"
                 {% endif %}>

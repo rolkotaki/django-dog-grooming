@@ -16,7 +16,9 @@ urlpatterns = [
     path('signup', views.sign_up, name='signup'),
     path('change_password', views.CustomPasswordChangeView.as_view(), name='change_password'),
     path('personal_data', views.personal_data, name='personal_data'),
+    path('user_bookings', views.UserBookingsPage.as_view(), name='user_bookings'),
     path('admin_api', views.admin_api_page, name='admin_api'),
+    path('service/<int:service_id>/booking', views.booking, name='booking'),
     path('api/admin/contact/create', api_views.ContactCreate.as_view(), name='api_contact_create'),
     path('api/admin/contact/update_delete/<str:id>/', api_views.ContactRetrieveUpdateDestroy.as_view(),
          name='api_contact_update_delete'),
@@ -24,4 +26,8 @@ urlpatterns = [
     path('api/admin/service/create', api_views.ServiceCreate.as_view(), name='api_service_create'),
     path('api/admin/service/update_delete/<int:id>/', api_views.ServiceRetrieveUpdateDestroy.as_view(),
          name='api_service_update_delete'),
+    path('api/admin/booking/create', api_views.BookingCreate.as_view(), name='api_booking_create'),
+    path('api/booking/free_booking_slots', api_views.ListFreeTimeSlots.as_view(), name='api_free_booking_slots'),
+    path('api/booking/<int:booking_id>/cancel', api_views.CancelBooking.as_view(), name='api_cancel_booking'),
+    path('api/admin/bookings', api_views.BookingList.as_view(), name='api_bookings'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

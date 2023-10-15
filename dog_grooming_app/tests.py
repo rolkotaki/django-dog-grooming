@@ -1,6 +1,7 @@
 import os
 import copy
 import re
+import datetime
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 from django.test import TestCase, Client
@@ -9,7 +10,7 @@ from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils.translation import gettext as _
 
-from .models import CustomUser, Contact, Service
+from .models import CustomUser, Contact, Service, Booking
 
 
 class ContactAPITestCase(APITestCase):
@@ -25,8 +26,18 @@ class ContactAPITestCase(APITestCase):
             'phone_number': '+36991234567',
             'email': 'somebody@mail.com',
             'address': 'Happiness Street 1, HappyCity, 99999',
-            'opening_hours_en': 'Monday-Friday: 08:00 - 17:00 Saturday: 09:00 - 13:00',
-            'opening_hours_hu': 'Hétfő-Péntek: 08:00 - 17:00 Szombat: 09:00 - 13:00',
+            'opening_hour_monday': '08:00:00',
+            'closing_hour_monday': '17:30:00',
+            'opening_hour_tuesday': '08:00:00',
+            'closing_hour_tuesday': '17:30:00',
+            'opening_hour_wednesday': '08:00:00',
+            'closing_hour_wednesday': '17:30:00',
+            'opening_hour_thursday': '08:00:00',
+            'closing_hour_thursday': '17:30:00',
+            'opening_hour_friday': '08:00:00',
+            'closing_hour_friday': '17:30:00',
+            'opening_hour_saturday': '09:00:00',
+            'closing_hour_saturday': '13:30:00',
             'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
         }
         self.contact_update_attrs = {
@@ -149,10 +160,8 @@ class ServiceAPITestCase(APITestCase):
     def test_02_create_service(self):
         """Tests creating a service."""
         initial_count = Service.objects.count()
-        if initial_count == 1:  # we would get an error as we can have only one record
-            return True
         response = self._send_create_request()
-        if response.status_code != 201:  # if we could not create the contact data
+        if response.status_code != 201:  # if we could not create the service data
             print(response.data)
         self.assertEqual(Service.objects.count(), initial_count + 1)
         for attr, expected_value in self.service_attrs.items():
@@ -269,6 +278,203 @@ class ServiceAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 400)
 
 
+class BookingAPITestCase(APITestCase):
+    """
+    Test cases for APIs related to bookings.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        # creating a new service to be able to do a booking
+        self.service = self._create_new_service()
+        self.booking_attrs = {
+            'user': self.user.id,
+            'service': self.service.id,
+            'dog_size': 'big',
+            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+            'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
+            'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
+            'cancelled': False
+        }
+
+    def _create_new_service(self):
+        """Calls the API to create a new service. It uploads a photo too as it is required.
+        At the end the photo is deleted."""
+        self.client.force_authenticate(user=self.admin_user)
+        photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
+        service_attrs = {
+            'service_name_en': 'Service name EN',
+            'service_name_hu': 'Service name HU',
+            'price_default': 1000,
+            'price_small': 750,
+            'price_big': 1250,
+            'service_description_en': 'Description in English for the service.',
+            'service_description_hu': 'A szolgáltatás leírása magyarul.',
+            'max_duration': 60,
+            'active': True
+        }
+        with open(photo_path, 'rb') as photo_data:
+            service_attrs['photo'] = photo_data
+            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+        try:
+            created_service = Service.objects.last()
+            os.remove(created_service.photo.path)
+            return created_service
+        except:
+            return None
+
+    def _create_contact(self):
+        """Calls the API to create the contact details."""
+        contact_attrs = {
+            'phone_number': '+36991234567',
+            'email': 'somebody@mail.com',
+            'address': 'Happiness Street 1, HappyCity, 99999',
+            'opening_hour_monday': '08:00:00',
+            'closing_hour_monday': '17:30:00',
+            'opening_hour_tuesday': '08:00:00',
+            'closing_hour_tuesday': '17:30:00',
+            'opening_hour_wednesday': '08:00:00',
+            'closing_hour_wednesday': '17:30:00',
+            'opening_hour_thursday': '08:00:00',
+            'closing_hour_thursday': '17:30:00',
+            'opening_hour_friday': '08:00:00',
+            'closing_hour_friday': '17:30:00',
+            'opening_hour_saturday': '09:00:00',
+            'closing_hour_saturday': '13:30:00',
+            'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
+        }
+        self.client.force_authenticate(user=self.admin_user)
+        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+
+    def _send_create_request(self, admin=True):
+        """Calls the API to create the contact details."""
+        self.client.force_authenticate(user=self.admin_user if admin else self.user)
+        return self.client.post('/en/api/admin/booking/create', self.booking_attrs)
+
+    def test_01_create_booking_without_permission(self):
+        """Tries to create a booking without permission."""
+        response = self._send_create_request(admin=False)
+        self.assertEqual(response.status_code, 403)
+
+    def test_02_create_booking(self):
+        """Tests creating a booking."""
+        initial_count = Booking.objects.count()
+        response = self._send_create_request()
+        if response.status_code != 201:  # if we could not create the booking data
+            print(response.data)
+        self.assertEqual(Booking.objects.count(), initial_count + 1)
+        for attr, expected_value in self.booking_attrs.items():
+            self.assertEqual(response.data[attr], expected_value)
+
+    def test_03_list_bookings_without_permission(self):
+        """Tries to list the bookings (using the API) without permission."""
+        self._send_create_request()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/en/api/admin/bookings')
+        self.assertEqual(response.status_code, 403)
+
+    def test_04_list_bookings(self):
+        """Tests listing the bookings, using the API."""
+        self._send_create_request()
+        bookings_count = Booking.objects.count()
+        response = self.client.get('/en/api/admin/bookings')
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], bookings_count)
+        self.assertEqual(len(response.data['results']), bookings_count)
+
+    def test_05_list_only_active_bookings(self):
+        """Tests listing only the active bookings."""
+        self._send_create_request()
+        bookings_count = Booking.objects.count()
+        self.booking_attrs['date'] = datetime.datetime.strptime('2000-01-01', '%Y-%m-%d')
+        self._send_create_request()
+        response = self.client.get('/en/api/admin/bookings', {'active': True})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], bookings_count)
+        self.assertEqual(len(response.data['results']), bookings_count)
+
+    def test_06_list_only_cancelled_bookings(self):
+        """Tests listing only the cancelled bookings."""
+        self.booking_attrs['cancelled'] = True
+        self._send_create_request()
+        bookings_count = Booking.objects.count()
+        self.booking_attrs['cancelled'] = False
+        self._send_create_request()
+        response = self.client.get('/en/api/admin/bookings', {'cancelled': True})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], bookings_count)
+        self.assertEqual(len(response.data['results']), bookings_count)
+
+    def test_07_list_only_active_and_not_cancelled_bookings(self):
+        """Tests listing only the active and not cancelled bookings."""
+        self.booking_attrs['cancelled'] = False
+        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=1)
+        self._send_create_request()
+        bookings_count = Booking.objects.count()
+        self.booking_attrs['cancelled'] = True
+        self._send_create_request()
+        self.booking_attrs['date'] = datetime.datetime.strptime('2000-01-01', '%Y-%m-%d')
+        self._send_create_request()
+        response = self.client.get('/en/api/admin/bookings', {'active': True, 'cancelled': False})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], bookings_count)
+        self.assertEqual(len(response.data['results']), bookings_count)
+
+    def test_08_cancel_booking(self):
+        """Tests cancelling a booking."""
+        self.booking_attrs['cancelled'] = False
+        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=1)
+        self._send_create_request()
+        booking = Booking.objects.last()
+        original_cancelled = booking.cancelled
+        self.client.logout()
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse('api_cancel_booking', args=(booking.id,)), follow=True)
+        cancelled_booking = Booking.objects.get(id=booking.id)
+        self.assertRedirects(response, '/en/login?next=/en/user_bookings')
+        self.assertNotEquals(original_cancelled, cancelled_booking.cancelled)
+
+    def test_09_list_free_booking_slots(self):
+        """Tests listing the free booking slots for a given day."""
+        self._create_contact()
+        response = self.client.get('/en/api/booking/free_booking_slots',
+                                   {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+                                                                  '%Y-%m-%d'),
+                                    'service_id': self.service.id})
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertIn(['12:00', '12:00'], response_data.get('booking_slots'))
+        self.booking_attrs['time'] = '12:00:00'
+        self._send_create_request()
+        response = self.client.get('/en/api/booking/free_booking_slots',
+                                   {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+                                                                  '%Y-%m-%d'),
+                                    'service_id': self.service.id})
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertNotIn(['12:00', '12:00'], response_data.get('booking_slots'))
+
+    def test_10_booking_slots_for_closed_day(self):
+        """Tests listing the free booking slots for a closed day."""
+        self._create_contact()
+        today_weekday = datetime.date.today().weekday()
+        delta_to_sunday = today_weekday % 6
+        response = self.client.get('/en/api/booking/free_booking_slots',
+                                   {'day': datetime.date.strftime(datetime.date.today() +
+                                                                  datetime.timedelta(days=delta_to_sunday),
+                                                                  '%Y-%m-%d'),
+                                    'service_id': self.service.id})
+        self.assertEqual(response.status_code, 200)
+        response_data = response.json()
+        self.assertIn(['', 'Closed'], response_data.get('booking_slots'))
+
+
 class BaseViewTestCase(TestCase):
     """
     Test cases for the base view.
@@ -287,7 +493,7 @@ class BaseViewTestCase(TestCase):
         """Tests that the signup option is displayed when user is not logged in."""
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item_right" href="(.*?)">Sign Up</a>'
+        pattern = r'<a class="menu_item_right" href="(.*)">Sign Up</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -295,7 +501,7 @@ class BaseViewTestCase(TestCase):
         """Tests that the login option is displayed when user is not logged in."""
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item_right" href="(.*?)">Log In</a>'
+        pattern = r'<a class="menu_item_right" href="(.*)">Log In</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -312,7 +518,7 @@ class BaseViewTestCase(TestCase):
         self._login()
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item_right" href="(.*?)">Sign Up</a>'
+        pattern = r'<a class="menu_item_right" href="(.*)">Sign Up</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
 
@@ -321,7 +527,7 @@ class BaseViewTestCase(TestCase):
         self._login()
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item_right" href="(.*?)">Log In</a>'
+        pattern = r'<a class="menu_item_right" href="(.*)">Log In</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
 
@@ -339,13 +545,13 @@ class BaseViewTestCase(TestCase):
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
         for menu_item in [_('Home'), _('Services'), _('Gallery'), _('Contact')]:
-            pattern = r'<a class="menu_item" href="(.*?)">' + menu_item + r'</a>'
+            pattern = r'<a class="menu_item" href="(.*)">' + menu_item + r'</a>'
             match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
             self.assertIsNotNone(match)
         response = self.client.get('/hu', follow=True)
         html_content = response.content.decode('utf-8')
         for menu_item in [_('Home'), _('Services'), _('Gallery'), _('Contact')]:
-            pattern = r'<a class="menu_item" href="(.*?)">' + menu_item + r'</a>'
+            pattern = r'<a class="menu_item" href="(.*)">' + menu_item + r'</a>'
             match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
             self.assertIsNotNone(match)
 
@@ -488,8 +694,18 @@ class ContactViewTestCase(TestCase):
             'phone_number': '+36991234567',
             'email': 'somebody@mail.com',
             'address': 'Happiness Street 1, HappyCity, 99999',
-            'opening_hours_en': 'Monday-Friday: 08:00 - 17:00 Saturday: 09:00 - 13:00',
-            'opening_hours_hu': 'Hétfő-Péntek: 08:00 - 17:00 Szombat: 09:00 - 13:00',
+            'opening_hour_monday': '08:00:00',
+            'closing_hour_monday': '17:30:00',
+            'opening_hour_tuesday': '08:00:00',
+            'closing_hour_tuesday': '17:30:00',
+            'opening_hour_wednesday': '08:00:00',
+            'closing_hour_wednesday': '17:30:00',
+            'opening_hour_thursday': '08:00:00',
+            'closing_hour_thursday': '17:30:00',
+            'opening_hour_friday': '08:00:00',
+            'closing_hour_friday': '17:30:00',
+            'opening_hour_saturday': '09:00:00',
+            'closing_hour_saturday': '13:30:00',
             'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
         }
         Contact.objects.create(**self.contact_attrs)
@@ -506,8 +722,17 @@ class ContactViewTestCase(TestCase):
         self.assertContains(response, '<td>+36991234567</td>')
         self.assertContains(response, '<td>somebody@mail.com</td>')
         self.assertContains(response, '<td>Happiness Street 1, HappyCity, 99999</td>')
-        self.assertContains(response, 'Monday-Friday: 08:00 - 17:00 Saturday: 09:00 - 13:00')
         self.assertContains(response, 'src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses"')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<td>(.*)Closed(.*)</td>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        pattern = r'<td>(.*)Sunday:(.*)</td>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        pattern = r'<td>(.*)Monday:(.*)</td>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
 
 
 class GalleryViewTestCase(TestCase):
@@ -568,7 +793,7 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('services'))
         self.assertContains(response, '<div class="service_box">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<p class="service_box_name">(.*?)Service name EN(.*?)</p>'
+        pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -583,7 +808,7 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<p class="service_name">(.*?)Service name EN(.*?)</p>'
+        pattern = r'<p class="service_name">(.*)Service name EN(.*)</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -592,7 +817,7 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button" href(.*?)style="pointer-events: none;opacity: 0.60;"(.*?)Book(.*?)</a>'
+        pattern = r'<a class="a_button" href(.*)style="pointer-events: none;opacity: 0.60;"(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -602,10 +827,10 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button" href(.*?)style="pointer-events: none;opacity: 0.60;"(.*?)Book(.*?)</a>'
+        pattern = r'<a class="a_button" href(.*)style="pointer-events: none;opacity: 0.60;"(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
-        pattern = r'<a class="a_button" href(.*?)Book(.*?)</a>'
+        pattern = r'<a class="a_button" href(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -641,7 +866,7 @@ class AdminAPIViewTestCase(TestCase):
         response = self.client.get(reverse('admin_api'))
         self.assertEqual(response.status_code, 302)
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item" href="(.*?)">Admin API</a>'
+        pattern = r'<a class="menu_item" href="(.*)">Admin API</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
 
@@ -650,7 +875,7 @@ class AdminAPIViewTestCase(TestCase):
         self._login(admin=True)
         response = self.client.get(reverse('admin_api'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item" href="(.*?)">Admin API</a>'
+        pattern = r'<a class="menu_item" href="(.*)">Admin API</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -671,6 +896,267 @@ class AdminAPIViewTestCase(TestCase):
         self._login(admin=True)
         response = self.client.get(reverse('admin_api'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a id="service_update_delete_button" class="a_button red_button" >(.*?)Update/Delete</a>'
+        pattern = r'<a id="service_update_delete_button" class="a_button red_button" >(.*)Update/Delete</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
+
+    def test_06_list_booking_slots_button_disabled_when_no_selected(self):
+        """Tests that the Update/Delete button is not enabled until a service is selected from the list."""
+        self._login(admin=True)
+        response = self.client.get(reverse('admin_api'))
+        html_content = response.content.decode('utf-8')
+        pattern = r'<a id="free_booking_slots_button" class="a_button blue_button" >(.*)List Free Slots</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+
+class BookingViewTestCase(TestCase):
+    """
+    Test cases for the Booking view.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
+        self._create_contact()
+        self.service = self._create_new_service()
+
+    def _login(self):
+        """Logs in a normal user."""
+        self.client.logout()
+        self.client.force_login(user=self.user)
+
+    def _create_new_service(self):
+        """Calls the API to create a new service. It uploads a photo too as it is required.
+        At the end the photo is deleted."""
+        self.client.force_login(user=self.admin_user)
+        photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
+        service_attrs = {
+            'service_name_en': 'Service name EN',
+            'service_name_hu': 'Service name HU',
+            'price_default': 1000,
+            'price_small': 750,
+            'price_big': 1250,
+            'service_description_en': 'Description in English for the service.',
+            'service_description_hu': 'A szolgáltatás leírása magyarul.',
+            'max_duration': 60,
+            'active': True
+        }
+        with open(photo_path, 'rb') as photo_data:
+            service_attrs['photo'] = photo_data
+            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+        try:
+            created_service = Service.objects.last()
+            os.remove(created_service.photo.path)
+            return created_service
+        except:
+            return None
+
+    def _create_contact(self):
+        """Calls the API to create the contact details."""
+        contact_attrs = {
+            'phone_number': '+36991234567',
+            'email': 'somebody@mail.com',
+            'address': 'Happiness Street 1, HappyCity, 99999',
+            'opening_hour_monday': '08:00:00',
+            'closing_hour_monday': '17:30:00',
+            'opening_hour_tuesday': '08:00:00',
+            'closing_hour_tuesday': '17:30:00',
+            'opening_hour_wednesday': '08:00:00',
+            'closing_hour_wednesday': '17:30:00',
+            'opening_hour_thursday': '08:00:00',
+            'closing_hour_thursday': '17:30:00',
+            'opening_hour_friday': '08:00:00',
+            'closing_hour_friday': '17:30:00',
+            'opening_hour_saturday': '09:00:00',
+            'closing_hour_saturday': '13:30:00',
+            'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
+        }
+        self.client.force_login(user=self.admin_user)
+        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+
+    def test_01_booking_rendering(self):
+        """Tests that the booking view is rendered successfully and the correct template is used."""
+        self._login()
+        response = self.client.get(reverse('booking', args=(self.service.id,)))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'booking.html')
+
+    def test_02_booking_when_not_logged_in(self):
+        """Tests that the booking view is not available for users not logged in."""
+        self.client.logout()
+        response = self.client.get(reverse('booking', args=(self.service.id,)))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/en/login?next=/en/service/{}/booking'.format(self.service.id))
+
+    def test_03_booking_not_available_without_comment(self):
+        """Tests that the booking is not available without a comment."""
+        self._login()
+        self.client.get(reverse('booking', args=(self.service.id,)))
+        response = self.client.post(reverse('booking', args=(self.service.id,)),
+                                    {'dog_size': 'medium',
+                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+                                     'time': '08:00',
+                                     'comment': '',
+                                     })
+        self.assertContains(response, '<ul class="error_list">')
+        self.assertContains(response, 'This field is required.')
+
+    def test_04_booking_not_available_without_time(self):
+        """Tests that the booking is not available without a valid time."""
+        self._login()
+        self.client.get(reverse('booking', args=(self.service.id,)))
+        response = self.client.post(reverse('booking', args=(self.service.id,)),
+                                    {'dog_size': 'medium',
+                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+                                     'time': '',
+                                     'comment': 'My dog is a Golden and I would like to have it bathed.',
+                                     })
+        self.assertContains(response, '<ul class="error_list">')
+        self.assertContains(response, 'This field is required.')
+
+    def test_05_successful_booking_with_message(self):
+        """Tests that when the booking is successful, the correct success message is displayed."""
+        self._login()
+        self.client.get(reverse('booking', args=(self.service.id,)))
+        response = self.client.post(reverse('booking', args=(self.service.id,)),
+                                    {'dog_size': '',
+                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+                                                                    '%Y-%m-%d'),
+                                     'time': '08:00',
+                                     'comment': 'My dog is a Golden and I would like to have it bathed.',
+                                     }, follow=True)
+        self.assertContains(response, '<div class="form_success_message">')
+        self.assertContains(response, 'Your booking has been successful.')
+
+
+class UserBookingsViewTestCase(TestCase):
+    """
+    Test cases for the User Bookings view.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
+        self._create_contact()
+        self.service = self._create_new_service()
+        self.booking_attrs = {
+            'user': self.user,
+            'service': self.service,
+            'dog_size': 'big',
+            'service_price': 5000,
+            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+            'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
+            'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
+            'cancelled': False
+        }
+        self.booking = self._create_booking()
+
+    def _login(self):
+        """Logs in a normal user."""
+        self.client.logout()
+        self.client.force_login(user=self.user)
+
+    def _create_new_service(self):
+        """Calls the API to create a new service. It uploads a photo too as it is required.
+        At the end the photo is deleted."""
+        self.client.force_login(user=self.admin_user)
+        photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
+        service_attrs = {
+            'service_name_en': 'Service name EN',
+            'service_name_hu': 'Service name HU',
+            'price_default': 1000,
+            'price_small': 750,
+            'price_big': 1250,
+            'service_description_en': 'Description in English for the service.',
+            'service_description_hu': 'A szolgáltatás leírása magyarul.',
+            'max_duration': 60,
+            'active': True
+        }
+        with open(photo_path, 'rb') as photo_data:
+            service_attrs['photo'] = photo_data
+            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+        try:
+            created_service = Service.objects.last()
+            os.remove(created_service.photo.path)
+            return created_service
+        except:
+            return None
+
+    def _create_contact(self):
+        """Calls the API to create the contact details."""
+        contact_attrs = {
+            'phone_number': '+36991234567',
+            'email': 'somebody@mail.com',
+            'address': 'Happiness Street 1, HappyCity, 99999',
+            'opening_hour_monday': '08:00:00',
+            'closing_hour_monday': '17:30:00',
+            'opening_hour_tuesday': '08:00:00',
+            'closing_hour_tuesday': '17:30:00',
+            'opening_hour_wednesday': '08:00:00',
+            'closing_hour_wednesday': '17:30:00',
+            'opening_hour_thursday': '08:00:00',
+            'closing_hour_thursday': '17:30:00',
+            'opening_hour_friday': '08:00:00',
+            'closing_hour_friday': '17:30:00',
+            'opening_hour_saturday': '09:00:00',
+            'closing_hour_saturday': '13:30:00',
+            'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
+        }
+        self.client.force_login(user=self.admin_user)
+        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+
+    def _create_booking(self):
+        """Calls the API to create a booking."""
+        self.client.force_login(user=self.admin_user)
+        return Booking.objects.create(**self.booking_attrs)
+
+    def test_01_user_bookings_rendering(self):
+        """Tests that the user bookings view is rendered successfully and the correct template is used."""
+        self._login()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'user_bookings.html')
+
+    def test_02_user_bookings_when_not_logged_in(self):
+        """Tests that the user bookings view is not available for users not logged in."""
+        self.client.logout()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/en/login?next=/en/user_bookings')
+
+    def test_03_booking_box_is_displayed(self):
+        """Tests that the booking box is displayed indeed in the User Bookings view."""
+        self._login()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertContains(response, '<div class="user_booking_box">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_04_cancel_button_is_displayed(self):
+        """Tests that the booking box is displayed indeed in the User Bookings view."""
+        self._login()
+        response = self.client.get(reverse('user_bookings'))
+        html_content = response.content.decode('utf-8')
+        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_05_booking_box_disappears_after_cancel(self):
+        """Tests that the booking box is displayed indeed in the User Bookings view."""
+        self._login()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertContains(response, '<div class="user_booking_box">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        response = self.client.get(reverse('api_cancel_booking', args=(self.booking.id,)),follow=True)
+        html_content = response.content.decode('utf-8')
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertNotContains(response, '<div class="user_booking_box">')
+        self.assertIsNone(match)
