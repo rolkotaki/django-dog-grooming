@@ -1,11 +1,9 @@
-import os
 import datetime
 from django.contrib.auth.views import PasswordChangeView
 from django.views.generic import TemplateView
 from django.contrib.auth import login, authenticate
 from django.shortcuts import redirect, render
 from django.contrib import messages
-from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -14,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
-from .utils import get_free_booking_slots
+from .utils import get_free_booking_slots, upload_image_to_gallery, get_gallery_image_list, delete_image_from_gallery
 
 
 class HomePage(TemplateView):
@@ -127,9 +125,7 @@ class GalleryPage(TemplateView):
         Overriding the get_context_data method to add the image list from the gallery folder.
         """
         context = super().get_context_data(**kwargs)
-        images = os.listdir(os.path.join(settings.MEDIA_ROOT, 'gallery'))
-        images.remove('.gitkeep')
-        context["images"] = images
+        context["images"] = get_gallery_image_list()
         return context
 
 
@@ -176,7 +172,26 @@ class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
 def admin_api_page(request):
     services = Service.objects.order_by('id')
     active_services = Service.objects.filter(active=True).order_by('id')
-    return render(request, "admin_api.html", {'services': services, 'active_services': active_services})
+    gallery_images = get_gallery_image_list()
+    if request.method == 'GET':
+        return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
+                                                  'gallery_images': gallery_images})
+    if request.method == 'POST':
+        # uploading a new image to the gallery
+        if 'image_upload_submit' in request.POST:
+            image = request.FILES.get('image_to_be_uploaded')
+            if image:
+                upload_image_to_gallery(image)
+                messages.success(request, _("The image has been uploaded successfully."))
+                return redirect('admin_api')
+        # deleting an image from the gallery
+        if 'image_delete_submit' in request.POST:
+            image = request.POST.get('image_to_be_deleted')
+            delete_image_from_gallery(image)
+            messages.success(request, _("The image has been deleted successfully."))
+            return redirect('admin_api')
+        return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
+                                                  'gallery_images': gallery_images})
 
 
 @login_required(login_url='login')
@@ -229,5 +244,32 @@ class UserBookingsPage(LoginRequiredMixin, TemplateView):
         booking_filter = Q(cancelled=False) & Q(user=self.request.user.id) & \
                           (Q(date__gt=datetime.date.today()) |
                            (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
-        context["bookings"] = Booking.objects.filter(booking_filter)
+        context["bookings"] = Booking.objects.filter(booking_filter).order_by('date', 'time')
+        return context
+
+
+class AdminBookingsPage(LoginRequiredMixin, TemplateView):
+    """
+    View class for the admin booking list.
+    """
+    template_name = "admin_bookings.html"
+    login_url = 'login'
+
+    def dispatch(self, request, *args, **kwargs):
+        """
+        Overriding the dispatch method to restrict access to admin/staff users.
+        """
+        if not request.user.is_authenticated or not (request.user.is_staff or request.user.is_superuser):
+            return self.handle_no_permission()
+        return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        """
+        Overriding the get_context_data method to add the list of active Bookings.
+        """
+        context = super().get_context_data(**kwargs)
+        booking_filter = Q(cancelled=False) & \
+                          (Q(date__gt=datetime.date.today()) |
+                           (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
+        context["bookings"] = Booking.objects.filter(booking_filter).order_by('date', 'time')
         return context

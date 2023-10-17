@@ -1,5 +1,7 @@
 import datetime
+import os
 from django.utils.translation import gettext_lazy as _
+from django.conf import settings
 
 from .models import Booking, Contact, Service
 
@@ -124,3 +126,31 @@ def cancel_booking(booking_id, by_user=True):
         # TODO: send an email to the admin
         pass
     return True
+
+
+def upload_image_to_gallery(image):
+    """
+    Uploads an image to the gallery folder.
+    """
+    with open(os.path.join(settings.MEDIA_ROOT, 'gallery', image.name), 'wb+') as image_file:
+        for chunk in image.chunks():
+            image_file.write(chunk)
+    return True
+
+
+def get_gallery_image_list():
+    """
+    Returns the list of images in the gallery folder.
+    """
+    images = os.listdir(os.path.join(settings.MEDIA_ROOT, 'gallery'))
+    images.remove('.gitkeep')
+    return images
+
+
+def delete_image_from_gallery(image):
+    """
+    Deletes an image from the gallery folder.
+    """
+    if image in os.listdir(os.path.join(settings.MEDIA_ROOT, 'gallery')):
+        if os.path.isfile(os.path.join(settings.MEDIA_ROOT, 'gallery', image)):
+            os.remove(os.path.join(settings.MEDIA_ROOT, 'gallery', image))

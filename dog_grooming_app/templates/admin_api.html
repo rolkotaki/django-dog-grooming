@@ -47,6 +47,39 @@
             </select>
         </div>
 
+        <p>Gallery Images:</p>
+        <div>
+            <p>
+                <form method="POST" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <input name="image_upload_submit" class="a_button green_button" type="submit" value="{% trans 'Upload' %}" />
+                    <input name="image_to_be_uploaded" type="file" accept="image/png, image/jpeg" />
+                </form>
+            </p>
+            <p>
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    <input name="image_delete_submit" id="image_delete_button" class="a_button red_button" type="submit" value="{% trans 'Delete' %}" disabled/>
+                    <select name="image_to_be_deleted" id="image_to_be_deleted" onchange="enableDisableDeleteButton(this)" class="admin_image_list">
+                        <option value="none" >{% trans 'Choose an image!' %}</option>
+                        {% for gallery_image in gallery_images %}
+                            <option value="{{ gallery_image }}" >{{ gallery_image }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </p>
+
+            <div class="form_success_message">
+                {% if messages %}
+                    {% for message in messages %}
+                    {% if message.tags == 'success' %}
+                        {{ message }}
+                    {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+
     </div>
 
 </div>
@@ -76,6 +109,15 @@
             listFreeBookingSlotsButton.href = "api/booking/free_booking_slots?day=" + dateInput.value + "&service_id=" + serviceInput.value;
         } else {
             listFreeBookingSlotsButton.href = "";
+        }
+    }
+
+    function enableDisableDeleteButton(element) {
+        var deleteButton = document.getElementById("image_delete_button");
+        if (element.value != "none") {
+            deleteButton.disabled = false;
+        } else {
+            deleteButton.disabled = true;
         }
     }
 </script>

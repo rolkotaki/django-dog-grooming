@@ -166,7 +166,7 @@ class CancelBooking(APIView):
             booking_id = int(self.kwargs.get('booking_id'))
         except ValueError:
             return Response({'message': _('Incorrect booking id')}, status=status.HTTP_400_BAD_REQUEST)
-        by_user = request.query_params.get('by_user', True)
+        by_user = True if request.query_params.get('by_user', 'true').lower() == 'true' else False
         if cancel_booking(booking_id, by_user=by_user):
             return redirect(reverse('user_bookings'))
         return Response({'message': _('An error happened during the cancellation of the booking %(booking_id)')

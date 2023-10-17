@@ -58,7 +58,7 @@
                         <a href="{% url 'personal_data' %}">{% trans 'Personal data' %}</a>
                         <a href="{% url 'change_password' %}">{% trans 'Change password' %}</a>
                         {% if user.is_staff %}
-                            <a href="">{% trans 'Bookings' %}</a>
+                            <a href="{% url 'admin_bookings' %}">{% trans 'Bookings' %}</a>
                         {% else %}
                             <a href="{% url 'user_bookings' %}">{% trans 'My bookings' %}</a>
                         {% endif %}

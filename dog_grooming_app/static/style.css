@@ -149,8 +149,12 @@ html, body {
   margin: 20px;
 }
 
-.content_services, .content_user_bookings {
+.content_services {
   margin-top: 40px;
+}
+
+.content_bookings {
+  margin: 20px 0px 20px 0px;
 }
 
 .service_box {
@@ -460,8 +464,22 @@ html, body {
   width: 250px;
 }
 
+.admin_image_list {
+  width: 400px;
+}
+
 .user_booking_box {
-  width: 225px;
-  height: 320px;
+  min-width: 225px;
+  max-height: 400px;
   padding: 10px;
+  margin: 0px 5px 20px 5px;
+  //background-color: grey;
+}
+
+.admin_booking_box {
+  min-width: 225px;
+  max-height: 480px;
+  padding: 10px;
+  margin: 0px 5px 20px 5px;
+  //background-color: grey;
 }
