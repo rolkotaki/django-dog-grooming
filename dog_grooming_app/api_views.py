@@ -168,7 +168,7 @@ class CancelBooking(APIView):
             return Response({'message': _('Incorrect booking id')}, status=status.HTTP_400_BAD_REQUEST)
         by_user = True if request.query_params.get('by_user', 'true').lower() == 'true' else False
         if cancel_booking(booking_id, by_user=by_user):
-            return redirect(reverse('user_bookings'))
+            return redirect(reverse('user_bookings' if by_user else 'admin_bookings'))
         return Response({'message': _('An error happened during the cancellation of the booking %(booking_id)')
                                     % {'booking_id': booking_id}},
                         status=status.HTTP_500_INTERNAL_SERVER_ERROR)
