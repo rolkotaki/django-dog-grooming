@@ -10,16 +10,16 @@
 
     <div >
 
-        <p>{% trans 'Contact:' %}</p>
+        <h3>{% trans 'Contact:' %}</h3>
         <div>
             <a class="a_button green_button" href="{% url 'api_contact_create' %}">{% trans 'Create' %}</a>
             <a class="a_button red_button" href="{% url 'api_contact_update_delete' 'x' %}">{% trans 'Update/Delete' %}</a>
         </div>
 
-        <p>{% trans 'Services:' %}</p>
+        <h3>{% trans 'Services:' %}</h3>
         <div>
-            <a class="a_button blue_button" href="{% url 'api_services' %}">{% trans 'View' %}</a>
             <a class="a_button green_button" href="{% url 'api_service_create' %}">{% trans 'Create' %}</a>
+            <a class="a_button blue_button" href="{% url 'api_services' %}">{% trans 'View' %}</a>
             <br><br>
             <a id="service_update_delete_button" class="a_button red_button" >
                 {% trans 'Update/Delete' %}</a>
@@ -31,7 +31,7 @@
             </select>
         </div>
 
-        <p>{% trans 'Bookings:' %}</p>
+        <h3>{% trans 'Bookings:' %}</h3>
         <div>
             <a class="a_button green_button" href="{% url 'api_booking_create' %}">{% trans 'Create' %}</a>
             <a class="a_button blue_button" href="{% url 'api_bookings' %}">{% trans 'View' %}</a>
@@ -47,13 +47,13 @@
             </select>
         </div>
 
-        <p>Gallery Images:</p>
+        <h3>Gallery Images:</h3>
         <div>
             <p>
                 <form method="POST" enctype="multipart/form-data" novalidate>
                     {% csrf_token %}
                     <input name="image_upload_submit" class="a_button green_button" type="submit" value="{% trans 'Upload' %}" />
-                    <input name="image_to_be_uploaded" type="file" accept="image/png, image/jpeg" />
+                    <input name="image_to_be_uploaded" type="file" accept="image/*" />
                 </form>
             </p>
             <p>
@@ -68,16 +68,30 @@
                     </select>
                 </form>
             </p>
+        </div>
 
-            <div class="form_success_message">
-                {% if messages %}
-                    {% for message in messages %}
-                    {% if message.tags == 'success' %}
-                        {{ message }}
-                    {% endif %}
-                    {% endfor %}
+        <h3>{% trans 'Users:' %}</h3>
+        <div>
+            <a class="a_button blue_button" href="{% url 'api_users' %}">{% trans 'View' %}</a>
+            <br><br>
+            <a id="cancel_user_button" class="a_button red_button" >
+                {% trans 'Cancel User' %}</a>
+            <select onchange="setCancelUserAPIUrl(this)" class="admin_user_list">
+                <option value="none" >{% trans 'Choose a user!' %}</option>
+                {% for user in users %}
+                    <option value="{{ user.id }}" >{{ user.id }} - {{ user.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form_success_message">
+            {% if messages %}
+                {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    {{ message }}
                 {% endif %}
-            </div>
+                {% endfor %}
+            {% endif %}
         </div>
 
     </div>
@@ -118,6 +132,15 @@
             deleteButton.disabled = false;
         } else {
             deleteButton.disabled = true;
+        }
+    }
+
+    function setCancelUserAPIUrl(element) {
+        var cancelUserButton = document.getElementById("cancel_user_button");
+        if (element.value != "none") {
+            cancelUserButton.href = "api/admin/user/" + element.value + "/cancel";
+        } else {
+            cancelUserButton.href = "";
         }
     }
 </script>

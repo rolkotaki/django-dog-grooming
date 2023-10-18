@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import Contact, Service, Booking
+from .models import Contact, Service, Booking, CustomUser
 
 
 class ContactSerializer(serializers.ModelSerializer):
@@ -68,3 +68,13 @@ class BookingSerializer(serializers.ModelSerializer):
         model = Booking
         fields = ('id', 'user', 'service', 'dog_size', 'service_price', 'date', 'time', 'comment', 'cancelled',
                   'booking_date')
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    """
+    Serializer class of the Booking model for the API views.
+    """
+
+    class Meta:
+        model = CustomUser
+        exclude = ['password']

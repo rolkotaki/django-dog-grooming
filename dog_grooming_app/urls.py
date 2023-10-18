@@ -31,4 +31,6 @@ urlpatterns = [
     path('api/booking/free_booking_slots', api_views.ListFreeTimeSlots.as_view(), name='api_free_booking_slots'),
     path('api/booking/<int:booking_id>/cancel', api_views.CancelBooking.as_view(), name='api_cancel_booking'),
     path('api/admin/bookings', api_views.BookingList.as_view(), name='api_bookings'),
+    path('api/admin/users', api_views.UserList.as_view(), name='api_users'),
+    path('api/admin/user/<int:user_id>/cancel', api_views.CancelUser.as_view(), name='api_cancel_user'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -154,7 +154,7 @@ html, body {
 }
 
 .content_bookings {
-  margin: 20px 0px 20px 0px;
+  margin: 50px 0px 20px 0px;
 }
 
 .service_box {
@@ -468,6 +468,10 @@ html, body {
   width: 400px;
 }
 
+.admin_user_list {
+    width: 300px;
+}
+
 .user_booking_box {
   min-width: 225px;
   max-height: 400px;
@@ -482,4 +486,11 @@ html, body {
   padding: 10px;
   margin: 0px 5px 20px 5px;
   //background-color: grey;
+}
+
+#admin_booking_search_form {
+  position: absolute;
+  top: 120px;
+  left: 10px;
+  z-index: 9;
 }

@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.shortcuts import redirect
 from django.utils.translation import gettext_lazy as _
 from django_filters.rest_framework import DjangoFilterBackend
+from django.contrib import messages
 from rest_framework.generics import CreateAPIView, RetrieveUpdateDestroyAPIView, ListAPIView
 from rest_framework.views import APIView
 from rest_framework.exceptions import APIException
@@ -17,9 +18,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .serializers import ContactSerializer, ServiceSerializer, ServiceUpdateDeleteSerializer, BookingCreateSerializer, \
-                         BookingSerializer
-from .models import Contact, Service, Booking
-from .utils import get_free_booking_slots, cancel_booking
+    BookingSerializer, CustomUserSerializer
+from .models import Contact, Service, Booking, CustomUser
+from .utils import get_free_booking_slots, cancel_booking, cancel_user
 
 
 class ContactCreate(CreateAPIView):
@@ -190,7 +191,7 @@ class ListFreeTimeSlots(APIView):
             'message': _('These are the free booking slots'),
             'booking_slots': booking_slots
         }
-        return Response(response_data, status=status.HTTP_200_OK, content_type='application/json')
+        return Response(response_data, status=status.HTTP_200_OK)  # content_type='application/json'
 
 
 class BookingList(ListAPIView):
@@ -233,3 +234,51 @@ class BookingList(ListAPIView):
                 continue
             booking_filter = (booking_filter & q)
         return queryset.filter(booking_filter)
+
+
+class UserList(ListAPIView):
+    """
+    API view class to view/list the Users.
+    """
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    filter_backends = (DjangoFilterBackend, SearchFilter)
+    filter_fields = ('id', 'is_active')
+    search_fields = ('id', 'username', 'first_name', 'last_name', 'is_active')
+    pagination_class = Pagination
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        """
+        Overrides the get_queryset method to be able to filter on active users with the active parameter.
+        """
+        active = self.request.query_params.get('active', None)
+        if active is None:
+            return super().get_queryset()
+        queryset = CustomUser.objects.all()
+        if active.lower() == 'true':
+            return queryset.filter(Q(is_active=True))
+        elif active.lower() == 'false':
+            return queryset.filter(Q(is_active=False))
+        return queryset
+
+
+class CancelUser(APIView):
+    """
+    API view class to cancel a user.
+    """
+    authentication_classes = [SessionAuthentication, BasicAuthentication]
+    permission_classes = [IsAdminUser]
+
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id = int(self.kwargs.get('user_id'))
+        except ValueError:
+            return Response({'message': _('Incorrect user id')}, status=status.HTTP_400_BAD_REQUEST)
+        if cancel_user(user_id):
+            messages.success(request, _("The user has been cancelled successfully."))
+            return redirect(reverse('admin_api'))
+        return Response({'message': _('An error happened during the cancellation of the user %(user_id)')
+                                    % {'user_id': user_id}},
+                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)

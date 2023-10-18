@@ -5,6 +5,17 @@
 {% load i18n %}
 {% get_current_language as CURRENT_LANGUAGE %}
 
+<div id="admin_booking_search_form">
+    <form method="POST" novalidate>
+        {% csrf_token %}
+        <input name="booking_date" id="booking_date" type="date" value="{{ day }}" />
+        <label for="cancelled">{% trans 'Cancelled:' %}</label>
+        <input name="cancelled" id="cancelled" type="checkbox" value="cancelled" {% if cancelled %} checked {% endif %}/>
+        <input name="submit_search" type="submit" value="{% trans 'Search' %}"/>
+        <input name="submit_all" type="submit" value="{% trans 'All' %}" />
+    </form>
+</div>
+
 <div class="content content_bookings">
 
     {% for booking in bookings %}
@@ -38,7 +49,11 @@
             <p>{{ booking.user.first_name}} {{ booking.user.last_name}}</p>
         {% endif %}
         <p>{{ booking.user.username}}</p>
-        <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}?by_user=false">{% trans 'Cancel' %}</a>
+        {% if not booking.cancelled %}
+            <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}?by_user=false">{% trans 'Cancel' %}</a>
+        {% else %}
+            <p style="color:red;">{% trans 'Cancelled' %}</p>
+        {% endif %}
     </div>
 
     {% endfor %}

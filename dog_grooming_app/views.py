@@ -170,12 +170,16 @@ class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
 
 @staff_member_required()
 def admin_api_page(request):
+    """
+    View method for the Admin API page.
+    """
     services = Service.objects.order_by('id')
     active_services = Service.objects.filter(active=True).order_by('id')
+    users = CustomUser.objects.filter(is_active=True).order_by('id')
     gallery_images = get_gallery_image_list()
     if request.method == 'GET':
         return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
-                                                  'gallery_images': gallery_images})
+                                                  'users': users, 'gallery_images': gallery_images})
     if request.method == 'POST':
         # uploading a new image to the gallery
         if 'image_upload_submit' in request.POST:
@@ -191,7 +195,7 @@ def admin_api_page(request):
             messages.success(request, _("The image has been deleted successfully."))
             return redirect('admin_api')
         return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
-                                                  'gallery_images': gallery_images})
+                                                  'users': users, 'gallery_images': gallery_images})
 
 
 @login_required(login_url='login')
@@ -263,13 +267,30 @@ class AdminBookingsPage(LoginRequiredMixin, TemplateView):
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, day=None, cancelled=False, **kwargs):
         """
         Overriding the get_context_data method to add the list of active Bookings.
         """
         context = super().get_context_data(**kwargs)
-        booking_filter = Q(cancelled=False) & \
-                          (Q(date__gt=datetime.date.today()) |
-                           (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
+        if not day:
+            booking_filter = (Q(cancelled=False) | Q(cancelled=cancelled)) & \
+                              (Q(date__gt=datetime.date.today()) |
+                               (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
+        else:
+            booking_filter = (Q(cancelled=False) | Q(cancelled=cancelled)) & Q(date=day)
         context["bookings"] = Booking.objects.filter(booking_filter).order_by('date', 'time')
+        context['day'] = '' if not day else day
+        context['cancelled'] = True if cancelled else False
         return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Post method to handle the filtering and searching of the Bookings.
+        """
+        cancelled = True if request.POST.get('cancelled', False) else False
+        day = None  # if 'submit_all' in request.POST
+        # bookings for a specific day
+        if 'submit_search' in request.POST:
+            day = request.POST.get('booking_date', None)
+        context = self.get_context_data(day=day, cancelled=cancelled, **kwargs)
+        return self.render_to_response(context)

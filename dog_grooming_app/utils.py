@@ -3,7 +3,7 @@ import os
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 
-from .models import Booking, Contact, Service
+from .models import Booking, Contact, Service, CustomUser
 
 
 # break after services
@@ -154,3 +154,15 @@ def delete_image_from_gallery(image):
     if image in os.listdir(os.path.join(settings.MEDIA_ROOT, 'gallery')):
         if os.path.isfile(os.path.join(settings.MEDIA_ROOT, 'gallery', image)):
             os.remove(os.path.join(settings.MEDIA_ROOT, 'gallery', image))
+
+
+def cancel_user(user_id):
+    """
+    Cancels the user by putting the is_active flag to False.
+    """
+    user = CustomUser.objects.get(id=user_id)
+    user.is_active = False
+    user.save()
+    # we send a mail to the user
+    # TODO: send an email to the user
+    return True

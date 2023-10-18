@@ -435,9 +435,9 @@ class BookingAPITestCase(APITestCase):
         original_cancelled = booking.cancelled
         self.client.logout()
         self.client.force_authenticate(user=self.user)
-        response = self.client.get(reverse('api_cancel_booking', args=(booking.id,)), follow=True)
+        response = self.client.get(reverse('api_cancel_booking', args=(booking.id,)))
         cancelled_booking = Booking.objects.get(id=booking.id)
-        self.assertRedirects(response, '/en/login?next=/en/user_bookings')
+        self.assertEqual(response.status_code, 302)
         self.assertNotEquals(original_cancelled, cancelled_booking.cancelled)
 
     def test_09_list_free_booking_slots(self):
@@ -464,7 +464,7 @@ class BookingAPITestCase(APITestCase):
         """Tests listing the free booking slots for a closed day."""
         self._create_contact()
         today_weekday = datetime.date.today().weekday()
-        delta_to_sunday = today_weekday % 6
+        delta_to_sunday = (6 - today_weekday) % 6
         response = self.client.get('/en/api/booking/free_booking_slots',
                                    {'day': datetime.date.strftime(datetime.date.today() +
                                                                   datetime.timedelta(days=delta_to_sunday),
@@ -473,6 +473,61 @@ class BookingAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         response_data = response.json()
         self.assertIn(['', 'Closed'], response_data.get('booking_slots'))
+
+
+class UserAPITestCase(APITestCase):
+    """
+    Test cases for APIs related to users.
+    """
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+
+    def test_01_list_users_without_permission(self):
+        """Tries to list the users (using the API) without permission."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get('/en/api/admin/users')
+        self.assertEqual(response.status_code, 403)
+
+    def test_02_list_bookings(self):
+        """Tests listing the users, using the API."""
+        self.client.force_authenticate(user=self.admin_user)
+        users_count = CustomUser.objects.count()
+        response = self.client.get('/en/api/admin/users')
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], users_count)
+        self.assertEqual(len(response.data['results']), users_count)
+
+    def test_03_list_only_active_users(self):
+        """Tests listing only the active users."""
+        self.client.force_authenticate(user=self.admin_user)
+        users_count = CustomUser.objects.count()
+        inactive_user = CustomUser.objects.create_user(username='inactive_user', password='test_password',
+                                                       is_active=False)
+        response = self.client.get(reverse('api_users'), {'active': True})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], users_count)
+        self.assertEqual(len(response.data['results']), users_count)
+
+    def test_04_cancel_user_without_permission(self):
+        """Tests cancelling a user without permission."""
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse('api_cancel_user', args=(self.user.id,)), follow=True)
+        self.assertEqual(response.status_code, 403)
+
+    def test_05_cancel_user(self):
+        """Tests cancelling a user."""
+        original_is_active = self.user.is_active
+        self.client.logout()
+        self.client.force_authenticate(user=self.admin_user)
+        response = self.client.get(reverse('api_cancel_user', args=(self.user.id,)))
+        cancelled_user = CustomUser.objects.get(id=self.user.id)
+        self.assertEqual(response.status_code, 302)
+        self.assertNotEquals(original_is_active, cancelled_user.is_active)
 
 
 class BaseViewTestCase(TestCase):
@@ -909,6 +964,15 @@ class AdminAPIViewTestCase(TestCase):
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
+    def test_07_cancel_user_button_disabled_when_no_selected(self):
+        """Tests that the Cancel User button is not enabled until a user is selected from the list."""
+        self._login(admin=True)
+        response = self.client.get(reverse('admin_api'))
+        html_content = response.content.decode('utf-8')
+        pattern = r'<a id="cancel_user_button" class="a_button red_button" >(.*)Cancel User</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
 
 class BookingViewTestCase(TestCase):
     """
@@ -1042,16 +1106,6 @@ class UserBookingsViewTestCase(TestCase):
         self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
         self._create_contact()
         self.service = self._create_new_service()
-        self.booking_attrs = {
-            'user': self.user,
-            'service': self.service,
-            'dog_size': 'big',
-            'service_price': 5000,
-            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
-            'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
-            'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
-            'cancelled': False
-        }
         self.booking = self._create_booking()
 
     def _login(self):
@@ -1111,7 +1165,17 @@ class UserBookingsViewTestCase(TestCase):
     def _create_booking(self):
         """Calls the API to create a booking."""
         self.client.force_login(user=self.admin_user)
-        return Booking.objects.create(**self.booking_attrs)
+        booking_attrs = {
+            'user': self.user,
+            'service': self.service,
+            'dog_size': 'big',
+            'service_price': 5000,
+            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+            'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
+            'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
+            'cancelled': False
+        }
+        return Booking.objects.create(**booking_attrs)
 
     def test_01_user_bookings_rendering(self):
         """Tests that the user bookings view is rendered successfully and the correct template is used."""
@@ -1125,7 +1189,7 @@ class UserBookingsViewTestCase(TestCase):
         self.client.logout()
         response = self.client.get(reverse('user_bookings'))
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/en/login?next=/en/user_bookings')
+        self.assertRedirects(response, '/en/login?next=/en/my_bookings')
 
     def test_03_booking_box_is_displayed(self):
         """Tests that the booking box is displayed indeed in the User Bookings view."""
@@ -1155,8 +1219,234 @@ class UserBookingsViewTestCase(TestCase):
         pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
-        response = self.client.get(reverse('api_cancel_booking', args=(self.booking.id,)),follow=True)
+        response = self.client.get(reverse('api_cancel_booking', args=(self.booking.id,)), follow=True)
         html_content = response.content.decode('utf-8')
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertNotContains(response, '<div class="user_booking_box">')
+        self.assertIsNone(match)
+
+
+class AdminBookingsViewTestCase(TestCase):
+    """
+    Test cases for the Admin Bookings view.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
+        self._create_contact()
+        self.service = self._create_new_service()
+        self.booking = self._create_booking()
+
+    def _login(self, admin=True):
+        """Logs in a normal user."""
+        self.client.logout()
+        self.client.force_login(user=self.admin_user if admin else self.user)
+
+    def _create_new_service(self):
+        """Calls the API to create a new service. It uploads a photo too as it is required.
+        At the end the photo is deleted."""
+        self._login(admin=True)
+        photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
+        service_attrs = {
+            'service_name_en': 'Service name EN',
+            'service_name_hu': 'Service name HU',
+            'price_default': 1000,
+            'price_small': 750,
+            'price_big': 1250,
+            'service_description_en': 'Description in English for the service.',
+            'service_description_hu': 'A szolgáltatás leírása magyarul.',
+            'max_duration': 60,
+            'active': True
+        }
+        with open(photo_path, 'rb') as photo_data:
+            service_attrs['photo'] = photo_data
+            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+        try:
+            created_service = Service.objects.last()
+            os.remove(created_service.photo.path)
+            return created_service
+        except:
+            return None
+
+    def _create_contact(self):
+        """Calls the API to create the contact details."""
+        contact_attrs = {
+            'phone_number': '+36991234567',
+            'email': 'somebody@mail.com',
+            'address': 'Happiness Street 1, HappyCity, 99999',
+            'opening_hour_monday': '08:00:00',
+            'closing_hour_monday': '17:30:00',
+            'opening_hour_tuesday': '08:00:00',
+            'closing_hour_tuesday': '17:30:00',
+            'opening_hour_wednesday': '08:00:00',
+            'closing_hour_wednesday': '17:30:00',
+            'opening_hour_thursday': '08:00:00',
+            'closing_hour_thursday': '17:30:00',
+            'opening_hour_friday': '08:00:00',
+            'closing_hour_friday': '17:30:00',
+            'opening_hour_saturday': '09:00:00',
+            'closing_hour_saturday': '13:30:00',
+            'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
+        }
+        self._login(admin=True)
+        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+
+    def _create_booking(self, cancelled=False):
+        """Calls the API to create a booking."""
+        self._login(admin=False)
+        booking_attrs = {
+            'user': self.user,
+            'service': self.service,
+            'dog_size': 'big',
+            'service_price': 5000,
+            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+            'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
+            'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
+            'cancelled': False
+        }
+        cancelled_booking_attrs = {
+            'user': self.user,
+            'service': self.service,
+            'dog_size': 'big',
+            'service_price': 5000,
+            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=2), '%Y-%m-%d'),
+            'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
+            'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
+            'cancelled': True
+        }
+        return Booking.objects.create(**(booking_attrs if not cancelled else cancelled_booking_attrs))
+
+    def test_01_admin_bookings_rendering(self):
+        """Tests that the admin bookings view is rendered successfully and the correct template is used."""
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'admin_bookings.html')
+
+    def test_02_admin_bookings_when_not_logged_in(self):
+        """Tests that the admin bookings view is not available for users not logged in."""
+        self.client.logout()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/en/login?next=/en/bookings')
+
+    def test_03_admin_bookings_when_not_staff(self):
+        """Tests that the admin bookings view is only available for staff users."""
+        self._login(admin=False)
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_04_booking_box_is_displayed(self):
+        """Tests that the booking box is displayed indeed in the Admin Bookings view."""
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertContains(response, '<div class="admin_booking_box">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_05_cancel_button_is_displayed(self):
+        """Tests that the booking box is displayed indeed in the Admin Bookings view."""
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        html_content = response.content.decode('utf-8')
+        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_06_booking_box_disappears_after_cancel(self):
+        """Tests that the booking box is displayed indeed in the Admin Bookings view."""
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertContains(response, '<div class="admin_booking_box">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        response = self.client.get(reverse('api_cancel_booking', args=(self.booking.id,)), follow=True)
+        html_content = response.content.decode('utf-8')
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+        self.assertIsNone(match)
+
+    def test_07_admin_bookings_search_elements_displayed(self):
+        """Tests that the search elements are displayed indeed in the Admin Bookings view."""
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertContains(response, '<div id="admin_booking_search_form">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<input name="booking_date" id="booking_date" type="date" value="(.*)" />'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        pattern = r'<input name="cancelled" id="cancelled" type="checkbox" value="cancelled" (.*)/>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        self.assertContains(response, '<input name="submit_search" type="submit" value="Search"/>')
+        self.assertContains(response, '<input name="submit_all" type="submit" value="All" />')
+
+    def test_08_admin_booking_filter_on_cancelled_too(self):
+        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        self.cancelled_booking = self._create_booking(cancelled=True)
+        self._login()
+        response = self.client.post(reverse('admin_bookings'), {'cancelled': 'cancelled'}, follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p style="color:red;">Cancelled</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_09_admin_booking_filter_on_active(self):
+        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        self.cancelled_booking = self._create_booking(cancelled=True)
+        self._login()
+        response = self.client.post(reverse('admin_bookings'), follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p style="color:red;">Cancelled</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNone(match)
+        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_10_admin_booking_filter_on_date(self):
+        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        self.cancelled_booking = self._create_booking(cancelled=True)
+        self._login()
+        response = self.client.post(reverse('admin_bookings'), {'booking_date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+                                                                'cancelled': 'cancelled',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        # only the active booking should be available, based on the date
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p style="color:red;">Cancelled</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNone(match)
+        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+
+    def test_11_admin_booking_filter_on_date(self):
+        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        self.cancelled_booking = self._create_booking(cancelled=True)
+        self._login()
+        response = self.client.post(reverse('admin_bookings'), {'booking_date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=2), '%Y-%m-%d'),
+                                                                'cancelled': 'cancelled',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        # only the cancelled booking should be available, based on the date
+        html_content = response.content.decode('utf-8')
+        pattern = r'<p style="color:red;">Cancelled</p>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
+        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
