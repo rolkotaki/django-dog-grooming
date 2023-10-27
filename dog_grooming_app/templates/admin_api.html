@@ -23,7 +23,7 @@
             <br><br>
             <a id="service_update_delete_button" class="a_button red_button" >
                 {% trans 'Update/Delete' %}</a>
-            <select onchange="setServiceAPIUrl(this)" class="admin_service_list">
+            <select onchange="setServiceUpdateDeleteAPIUrlOnAdminPage(this)" class="select_input admin_service_list">
                 <option value="none" >{% trans 'Choose a service!' %}</option>
                 {% for service in services %}
                     <option value="{{ service.id }}" >{{ service.id }} - {{ service.service_name_hu }}</option>
@@ -38,8 +38,8 @@
             <br><br>
             <a id="free_booking_slots_button" class="a_button blue_button" >
                 {% trans 'List Free Slots' %}</a>
-            <input type="date" class="date_input" id="date" name="date" onchange="setBookingAPIUrl()"/>
-            <select id="service_list" onchange="setBookingAPIUrl()" class="admin_service_list">
+            <input type="date" class="date_input" id="date" name="date" onchange="setAvailableBookingSlotsAPIUrlOnAdminPage()"/>
+            <select id="service_list" onchange="setAvailableBookingSlotsAPIUrlOnAdminPage()" class="select_input admin_service_list">
                 <option value="none" >{% trans 'Choose a service!' %}</option>
                 {% for active_service in active_services %}
                     <option value="{{ active_service.id }}" >{{ active_service.id }} - {{ active_service.service_name_hu }}</option>
@@ -50,17 +50,17 @@
         <h3>Gallery Images:</h3>
         <div>
             <p>
-                <form method="POST" enctype="multipart/form-data" novalidate>
+                <form method="POST" enctype="multipart/form-data" >
                     {% csrf_token %}
                     <input name="image_upload_submit" class="a_button green_button" type="submit" value="{% trans 'Upload' %}" />
                     <input name="image_to_be_uploaded" type="file" accept="image/*" />
                 </form>
             </p>
             <p>
-                <form method="POST" novalidate>
+                <form method="POST" >
                     {% csrf_token %}
                     <input name="image_delete_submit" id="image_delete_button" class="a_button red_button" type="submit" value="{% trans 'Delete' %}" disabled/>
-                    <select name="image_to_be_deleted" id="image_to_be_deleted" onchange="enableDisableDeleteButton(this)" class="admin_image_list">
+                    <select name="image_to_be_deleted" id="image_to_be_deleted" onchange="enableDisableGalleryImageDeleteButtonOnAdminPage(this)" class="select_input admin_image_list">
                         <option value="none" >{% trans 'Choose an image!' %}</option>
                         {% for gallery_image in gallery_images %}
                             <option value="{{ gallery_image }}" >{{ gallery_image }}</option>
@@ -76,7 +76,7 @@
             <br><br>
             <a id="cancel_user_button" class="a_button red_button" >
                 {% trans 'Cancel User' %}</a>
-            <select onchange="setCancelUserAPIUrl(this)" class="admin_user_list">
+            <select onchange="setCancelUserAPIUrlOnAdminPage(this)" class="select_input admin_user_list">
                 <option value="none" >{% trans 'Choose a user!' %}</option>
                 {% for user in users %}
                     <option value="{{ user.id }}" >{{ user.id }} - {{ user.username }}</option>
@@ -99,50 +99,7 @@
 </div>
 
 <script>
-    document.getElementById("date").min = new Date().toISOString().split("T")[0];
-    document.getElementById("date").value = new Date().toISOString().split("T")[0];
-    max_date = new Date()
-    max_date.setDate(max_date.getDate() + 90)
-    document.getElementById("date").max = max_date.toISOString().split("T")[0];
-</script>
-<script>
-    function setServiceAPIUrl(element) {
-        var serviceUpdateDeleteButton = document.getElementById("service_update_delete_button");
-        if (element.value != "none") {
-            serviceUpdateDeleteButton.href = "api/admin/service/update_delete/" + element.value + "/";
-        } else {
-            serviceUpdateDeleteButton.href = "";
-        }
-    }
-
-    function setBookingAPIUrl() {
-        var listFreeBookingSlotsButton = document.getElementById("free_booking_slots_button");
-        var dateInput = document.getElementById("date");
-        var serviceInput = document.getElementById("service_list");
-        if (serviceInput.value != "none") {
-            listFreeBookingSlotsButton.href = "api/booking/free_booking_slots?day=" + dateInput.value + "&service_id=" + serviceInput.value;
-        } else {
-            listFreeBookingSlotsButton.href = "";
-        }
-    }
-
-    function enableDisableDeleteButton(element) {
-        var deleteButton = document.getElementById("image_delete_button");
-        if (element.value != "none") {
-            deleteButton.disabled = false;
-        } else {
-            deleteButton.disabled = true;
-        }
-    }
-
-    function setCancelUserAPIUrl(element) {
-        var cancelUserButton = document.getElementById("cancel_user_button");
-        if (element.value != "none") {
-            cancelUserButton.href = "api/admin/user/" + element.value + "/cancel";
-        } else {
-            cancelUserButton.href = "";
-        }
-    }
+    window.onload = setInitialDateForAvailableBookingSlotsOnAdminPage();
 </script>
 
 {% endblock %}

@@ -1,16 +1,15 @@
 import datetime
 import os
+from typing import List, Tuple
 from django.utils.translation import gettext_lazy as _
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from .models import Booking, Contact, Service, CustomUser
+from .constants import BREAK, BOOKING_SLOT_SEARCH_TIME_INTERVAL
 
 
-# break after services
-BREAK = 15
-
-
-def get_opening_hour_for_day(day_of_week: int):
+def get_opening_hour_for_day(day_of_week: int) -> datetime.time:
     """
     Returns the opening hour for a given day of the week.
     """
@@ -27,7 +26,7 @@ def get_opening_hour_for_day(day_of_week: int):
     return opening_hour_attrs.get(day_of_week)
 
 
-def get_closing_hour_for_day(day_of_week: int):
+def get_closing_hour_for_day(day_of_week: int) -> datetime.time:
     """
     Returns the closing hour for a given day of the week.
     """
@@ -44,7 +43,7 @@ def get_closing_hour_for_day(day_of_week: int):
     return closing_hour_attrs.get(day_of_week)
 
 
-def get_duration_of_service(service_id):
+def get_duration_of_service(service_id: int) -> Tuple[datetime.timedelta, datetime.timedelta]:
     """
     Returns the duration of a service with and without the break.
     """
@@ -54,7 +53,8 @@ def get_duration_of_service(service_id):
     return duration_without_break, duration_with_break
 
 
-def get_booked_time_slots(day, duration_with_break):
+def get_booked_time_slots(day: datetime.date, duration_with_break: datetime.timedelta) \
+        -> List[Tuple[datetime.time, datetime.time]]:
     """
     Returns the booked time slots for a given day.
     Returns a list of tuples where each tuple contains the start and end time of the booking.
@@ -65,7 +65,7 @@ def get_booked_time_slots(day, duration_with_break):
             for booking in bookings]
 
 
-def get_free_booking_slots(day, service_id):
+def get_available_booking_slots(day: [datetime.date, str], service_id: int) -> List[Tuple[str, str]]:
     """
     Returns the list of free time slots that can be booked on a given day.
     :param day: The day for which we want to retrieve the free slots that can be booked.
@@ -99,9 +99,18 @@ def get_free_booking_slots(day, service_id):
                     (booked_slot[0] < cur_time_with_duration <= booked_slot[1]):
                 timeslot_available = False
                 break
+        # if the timeslot is available, we append it to the list to be returned
         if timeslot_available:
-            inital_times.append((datetime.time.strftime(cur_time, '%H:%M'), datetime.time.strftime(cur_time, '%H:%M')))
-        cur_time = (datetime.datetime.combine(booking_day, cur_time) + duration_without_break).time()
+            inital_times.append((datetime.time.strftime(cur_time, '%H:%M'),
+                                 "{} - {}".format(datetime.time.strftime(cur_time, '%H:%M'),
+                                                  datetime.time.strftime(
+                                                      (datetime.datetime.combine(booking_day, cur_time) +
+                                                       duration_without_break).time(),
+                                                      '%H:%M'))))
+        # we increase the current time by the booking slot search time interval
+        cur_time = (datetime.datetime.combine(booking_day, cur_time) +
+                    datetime.timedelta(minutes=BOOKING_SLOT_SEARCH_TIME_INTERVAL)).time()
+        # cur_time = (datetime.datetime.combine(booking_day, cur_time) + duration_without_break).time()
         # TODO: to check with the owner if for example a one hour booking can start at any minute of an hour
         #  or only in certain times, like every half hour
     if len(inital_times) == 0:
@@ -109,7 +118,7 @@ def get_free_booking_slots(day, service_id):
     return inital_times
 
 
-def cancel_booking(booking_id, by_user=True):
+def cancel_booking(booking_id: int, by_user: bool = True) -> bool:
     """
     Cancels the booking by putting the cancelled flag to True.
     The by_user param indicates whether it is cancelled by the user themselves or by the admin.
@@ -128,7 +137,7 @@ def cancel_booking(booking_id, by_user=True):
     return True
 
 
-def upload_image_to_gallery(image):
+def upload_image_to_gallery(image: InMemoryUploadedFile) -> bool:
     """
     Uploads an image to the gallery folder.
     """
@@ -138,7 +147,7 @@ def upload_image_to_gallery(image):
     return True
 
 
-def get_gallery_image_list():
+def get_gallery_image_list() -> List[str]:
     """
     Returns the list of images in the gallery folder.
     """
@@ -147,7 +156,7 @@ def get_gallery_image_list():
     return images
 
 
-def delete_image_from_gallery(image):
+def delete_image_from_gallery(image: str) -> None:
     """
     Deletes an image from the gallery folder.
     """
@@ -156,7 +165,7 @@ def delete_image_from_gallery(image):
             os.remove(os.path.join(settings.MEDIA_ROOT, 'gallery', image))
 
 
-def cancel_user(user_id):
+def cancel_user(user_id: int) -> bool:
     """
     Cancels the user by putting the is_active flag to False.
     """

@@ -1,8 +1,10 @@
 from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import RegexValidator
 
 from .models import CustomUser, Booking
+from .constants import PHONE_NUMBER_VALIDATOR
 
 
 class LoginForm(forms.Form):
@@ -20,7 +22,9 @@ class SignUpForm(UserCreationForm):
     first_name = forms.CharField(required=True, max_length=150, label=_('First name'))
     last_name = forms.CharField(required=True, max_length=150, label=_('Last name'))
     email = forms.EmailField(required=True, max_length=254, widget=forms.EmailInput(attrs={'class': 'validate', }))
-    phone_number = forms.CharField(required=True, max_length=20, label=_('Phone number'))
+    phone_number = forms.CharField(required=True, max_length=20, label=_('Phone number'),
+                                   validators=[RegexValidator(regex=PHONE_NUMBER_VALIDATOR,
+                                                              message=_('Enter a valid phone number.'))])
 
     class Meta:
         model = CustomUser
@@ -34,7 +38,9 @@ class PersonalDataForm(forms.Form):
     first_name = forms.CharField(required=True, max_length=150, label=_('First name'))
     last_name = forms.CharField(required=True, max_length=150, label=_('Last name'))
     email = forms.EmailField(required=True, max_length=254, widget=forms.EmailInput(attrs={'class': 'validate', }))
-    phone_number = forms.CharField(required=True, max_length=20, label=_('Phone number'))
+    phone_number = forms.CharField(required=True, max_length=20, label=_('Phone number'),
+                                   validators=[RegexValidator(regex=PHONE_NUMBER_VALIDATOR,
+                                                              message=_('Enter a valid phone number.'))])
 
     class Meta:
         model = CustomUser
@@ -48,9 +54,10 @@ class BookingForm(forms.Form):
     dog_size = forms.CharField(widget=forms.Select(attrs={'id': 'dog_size', 'name': 'dog_size'}),
                                label=_('Time:'), required=False)
     date = forms.DateField(widget=forms.TextInput(attrs={'type': 'date', 'class': 'date_input',
-                                                         'id': 'date', 'name': 'date'}),
+                                                         'id': 'date', 'name': 'date',
+                                                         'onchange': 'fetchAvailableBookingTimeSlots()'}),
                            label=_('Date:'))
-    time = forms.CharField(widget=forms.Select(attrs={'class': 'time_input', 'id': 'time', 'name': 'time'}),
+    time = forms.CharField(widget=forms.Select(attrs={'class': 'select_input', 'id': 'time', 'name': 'time'}),
                            label=_('Time:'))
     comment = forms.CharField(widget=forms.Textarea(attrs={'rows': '7', 'maxlength': '500',
                                                            'placeholder': _('Please tell us the breed of your dog and the required things to do ...'),
@@ -61,10 +68,10 @@ class BookingForm(forms.Form):
         """
         Overriding the constructor to load the initial times in the dropdown list for the default day.
         """
-        free_booking_slots = kwargs.pop('free_booking_slots', None)
+        available_booking_slots = kwargs.pop('available_booking_slots', None)
         super().__init__(*args, **kwargs)
-        if free_booking_slots:
-            self.fields['time'].widget.choices = free_booking_slots
+        if available_booking_slots:
+            self.fields['time'].widget.choices = available_booking_slots
 
     class Meta:
         model = Booking

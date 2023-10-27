@@ -2,7 +2,6 @@
 {% block 'content' %}
 
 {% load i18n %}
-{% load extra_filters %}
 
 <div class="content content_booking">
 
@@ -10,10 +9,11 @@
         <p class="page_title">Booking</p>
         <form class="booking_form" method="POST" novalidate>
             {% csrf_token %}
+            <input type="hidden" id="service_id" value="{{ service.id }}">
             {% if service.price_small is not None or service.price_big is not None %}
                 <div class="service_option" >
                     <label for="dog_size">{% trans 'Dog size:' %}</label>
-                    <select name="dog_size" id="dog_size" onchange="changePrice(this)">
+                    <select class="select_input" name="dog_size" id="dog_size" onchange="changeBookingPriceForDogSize(this)">
                         {% if service.price_small is not None %}<option value="small">{% trans 'small' %}</option>{% endif %}
                         <option value="medium" selected >{% trans 'medium' %}</option>
                         {% if service.price_big is not None %}<option value="big">{% trans 'big' %}</option>{% endif %}
@@ -38,8 +38,8 @@
                 {% endif %}
             {% endfor %}
             <div class="form_buttons">
-                <input class="a_button input_button" type="submit" value="{% trans 'Book' %}" />
-                <a class="a_button back_button" href="{% url 'service' service_id=service.id %}">{% trans 'Back' %}</a>
+                <input class="a_button green_button" type="submit" value="{% trans 'Book' %}" />
+                <a class="a_button grey_button" href="{% url 'service' service_id=service.id %}">{% trans 'Back' %}</a>
             </div>
         </form>
 
@@ -58,22 +58,7 @@
 </div>
 
 <script>
-    min_date = new Date()
-    min_date.setDate(min_date.getDate() + 1)
-    max_date = new Date()
-    max_date.setDate(max_date.getDate() + 90)
-    document.getElementById("date").min = min_date.toISOString().split("T")[0];
-    document.getElementById("date").value = min_date.toISOString().split("T")[0];
-    document.getElementById("date").max = max_date.toISOString().split("T")[0];
-</script>
-<script>
-    function changePrice(element) {
-        var value = element.value
-        document.getElementById("small").style.display = "none";
-        document.getElementById("medium").style.display = "none";
-        document.getElementById("big").style.display = "none";
-        document.getElementById(value).style.display = "block";
-    }
+    window.onload = setInitialDateOnBookingPage();
 </script>
 
 {% endblock %}

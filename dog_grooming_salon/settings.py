@@ -148,6 +148,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # custom settings
 
+SESSION_COOKIE_AGE = 604800  # 1 week
+SESSION_SAVE_EVERY_REQUEST = True
+
 AUTH_USER_MODEL = 'dog_grooming_app.CustomUser'
 
 LOGIN_REDIRECT_URL = 'home'

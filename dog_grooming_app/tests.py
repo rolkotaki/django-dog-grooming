@@ -4,6 +4,7 @@ import re
 import datetime
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
+from rest_framework import status
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.conf import settings
@@ -47,12 +48,12 @@ class ContactAPITestCase(APITestCase):
     def _send_create_request(self, admin=True):
         """Calls the API to create the contact details."""
         self.client.force_authenticate(user=self.admin_user if admin else self.user)
-        return self.client.post('/en/api/admin/contact/create', self.contact_attrs)
+        return self.client.post(reverse('api_contact_create'), self.contact_attrs)
 
     def test_01_create_contact_without_permission(self):
         """Tries to create contact details without permission."""
         response = self._send_create_request(admin=False)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_02_create_contact(self):
         """Tests creating the contact details."""
@@ -60,7 +61,7 @@ class ContactAPITestCase(APITestCase):
         if initial_count == 1:  # we would get an error as we can have only one record
             return True
         response = self._send_create_request()
-        if response.status_code != 201:  # if we could not create the contact data
+        if response.status_code != status.HTTP_201_CREATED:  # if we could not create the contact data
             print(response.data)
         self.assertEqual(Contact.objects.count(), initial_count + 1)
         for attr, expected_value in self.contact_attrs.items():
@@ -71,18 +72,17 @@ class ContactAPITestCase(APITestCase):
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
         contact = Contact.objects.first()
-        response = self.client.patch(
-            '/en/api/admin/contact/update_delete/{}/'.format(contact.id), self.contact_update_attrs, format='json',
-        )
-        self.assertEqual(response.status_code, 403)
+        response = self.client.patch(reverse('api_contact_update_delete', args=(contact.id,)),
+                                     self.contact_update_attrs,
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_04_update_contact(self):
         """Tests updating the contact details."""
         self._send_create_request()
         contact = Contact.objects.first()
-        self.client.patch(
-            '/en/api/admin/contact/update_delete/{}/'.format(contact.id), self.contact_update_attrs, format='json',
-        )
+        self.client.patch(reverse('api_contact_update_delete', args=(contact.id,)), self.contact_update_attrs,
+                          format='json')
         updated = Contact.objects.get(id=contact.id)
         self.assertEqual(updated.email, 'somebody@newmail.com')
 
@@ -91,23 +91,23 @@ class ContactAPITestCase(APITestCase):
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
         contact = Contact.objects.first()
-        response = self.client.delete('/en/api/admin/contact/update_delete/{}/'.format(contact.id))
-        self.assertEqual(response.status_code, 403)
+        response = self.client.delete(reverse('api_contact_update_delete', args=(contact.id,)))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_06_delete_contact(self):
         """Tests deleting the contact details."""
         self._send_create_request()
         initial_count = Contact.objects.count()
         contact = Contact.objects.first()
-        self.client.delete('/en/api/admin/contact/update_delete/{}/'.format(contact.id))
-        self.assertEqual(Contact.objects.count(), initial_count-1)
+        self.client.delete(reverse('api_contact_update_delete', args=(contact.id,)))
+        self.assertEqual(Contact.objects.count(), initial_count - 1)
         self.assertRaises(Contact.DoesNotExist, Contact.objects.get, id=contact.id)
 
     def test_07_cannot_create_multiple(self):
         """Tries to create multiple contact records."""
         self._send_create_request()
         response = self._send_create_request()
-        self.assertEqual(response.status_code, 500)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ServiceAPITestCase(APITestCase):
@@ -143,7 +143,7 @@ class ServiceAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.admin_user if admin else self.user)
         with open(self.photo_path, 'rb') as photo_data:
             self.service_attrs['photo'] = photo_data
-            response = self.client.post('/en/api/admin/service/create', self.service_attrs, format='multipart')
+            response = self.client.post(reverse('api_service_create'), self.service_attrs, format='multipart')
         if admin:
             try:
                 created_service = Service.objects.last()
@@ -155,13 +155,13 @@ class ServiceAPITestCase(APITestCase):
     def test_01_create_service_without_permission(self):
         """Tries to create a service without permission."""
         response = self._send_create_request(admin=False)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_02_create_service(self):
         """Tests creating a service."""
         initial_count = Service.objects.count()
         response = self._send_create_request()
-        if response.status_code != 201:  # if we could not create the service data
+        if response.status_code != status.HTTP_201_CREATED:  # if we could not create the service data
             print(response.data)
         self.assertEqual(Service.objects.count(), initial_count + 1)
         for attr, expected_value in self.service_attrs.items():
@@ -173,19 +173,18 @@ class ServiceAPITestCase(APITestCase):
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
         service = Service.objects.first()
-        response = self.client.patch(
-            '/en/api/admin/service/update_delete/{}/'.format(service.id), self.service_update_attrs, format='json',
-        )
-        self.assertEqual(response.status_code, 403)
+        response = self.client.patch(reverse('api_service_update_delete', args=(service.id,)),
+                                     self.service_update_attrs,
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_04_update_service(self):
         """Tests updating a service."""
         self._send_create_request()
         service = Service.objects.first()
         original_photo = service.photo
-        self.client.patch(
-            '/en/api/admin/service/update_delete/{}/'.format(service.id), self.service_update_attrs, format='json',
-        )
+        self.client.patch(reverse('api_service_update_delete', args=(service.id,)), self.service_update_attrs,
+                          format='json')
         updated = Service.objects.get(id=service.id)
         self.assertEqual(updated.service_name_en, 'Service name EN changed')
         self.assertEqual(updated.service_name_hu, 'Service name HU valtozott')
@@ -197,31 +196,31 @@ class ServiceAPITestCase(APITestCase):
         """Tries to delete a service without permission."""
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
-        contact = Service.objects.first()
-        response = self.client.delete('/en/api/admin/service/update_delete/{}/'.format(contact.id))
-        self.assertEqual(response.status_code, 403)
+        service = Service.objects.first()
+        response = self.client.delete(reverse('api_service_update_delete', args=(service.id,)))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_06_delete_service(self):
         """Tests deleting a service."""
         self._send_create_request()
         initial_count = Service.objects.count()
         service = Service.objects.first()
-        self.client.delete('/en/api/admin/service/update_delete/{}/'.format(service.id))
-        self.assertEqual(Service.objects.count(), initial_count-1)
+        self.client.delete(reverse('api_service_update_delete', args=(service.id,)))
+        self.assertEqual(Service.objects.count(), initial_count - 1)
         self.assertRaises(Service.DoesNotExist, Service.objects.get, id=service.id)
 
     def test_07_list_servies_without_permission(self):
         """Tries to list the services (using the API) without permission."""
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/en/api/admin/services')
-        self.assertEqual(response.status_code, 403)
+        response = self.client.get(reverse('api_services'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_08_list_servies(self):
         """Tests listing the services, using the API."""
         self._send_create_request()
         services_count = Service.objects.count()
-        response = self.client.get('/en/api/admin/services')
+        response = self.client.get(reverse('api_services'))
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], services_count)
@@ -233,7 +232,7 @@ class ServiceAPITestCase(APITestCase):
         services_count = Service.objects.count()
         self.service_attrs['active'] = False
         self._send_create_request()
-        response = self.client.get('/en/api/admin/services', {'active': True})
+        response = self.client.get(reverse('api_services'), {'active': True})
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], services_count)
@@ -243,39 +242,35 @@ class ServiceAPITestCase(APITestCase):
         """Tests that only positive integer prices can be created."""
         self.service_attrs['price_default'] = 0
         response = self._send_create_request()
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.service_attrs['price_default'] = ''
         response = self._send_create_request()
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.service_attrs['price_default'] = 1
         self.service_attrs['price_small'] = -1
         response = self._send_create_request()
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.service_attrs['price_small'] = 1
         self.service_attrs['price_big'] = 'a'
         response = self._send_create_request()
-        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_11_update_price_only_positive_integer(self):
         """Tests that prices can be updated only to positive integers."""
         self._send_create_request()
         service = Service.objects.first()
-        response = self.client.patch(
-            '/en/api/admin/service/update_delete/{}/'.format(service.id), {'price_default': 0}, format='json',
-        )
-        self.assertEqual(response.status_code, 400)
-        response = self.client.patch(
-            '/en/api/admin/service/update_delete/{}/'.format(service.id), {'price_default': ''}, format='json',
-        )
-        self.assertEqual(response.status_code, 400)
-        response = self.client.patch(
-            '/en/api/admin/service/update_delete/{}/'.format(service.id), {'price_small': 'Z'}, format='json',
-        )
-        self.assertEqual(response.status_code, 400)
-        response = self.client.patch(
-            '/en/api/admin/service/update_delete/{}/'.format(service.id), {'price_big': -1}, format='json',
-        )
-        self.assertEqual(response.status_code, 400)
+        response = self.client.patch(reverse('api_service_update_delete', args=(service.id,)), {'price_default': 0},
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch(reverse('api_service_update_delete', args=(service.id,)), {'price_default': ''},
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch(reverse('api_service_update_delete', args=(service.id,)), {'price_small': 'Z'},
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.patch(reverse('api_service_update_delete', args=(service.id,)), {'price_big': -1},
+                                     format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class BookingAPITestCase(APITestCase):
@@ -317,7 +312,7 @@ class BookingAPITestCase(APITestCase):
         }
         with open(photo_path, 'rb') as photo_data:
             service_attrs['photo'] = photo_data
-            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+            response = self.client.post(reverse('api_service_create'), service_attrs, format='multipart')
         try:
             created_service = Service.objects.last()
             os.remove(created_service.photo.path)
@@ -346,23 +341,23 @@ class BookingAPITestCase(APITestCase):
             'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
         }
         self.client.force_authenticate(user=self.admin_user)
-        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+        return self.client.post(reverse('api_contact_create'), contact_attrs)
 
     def _send_create_request(self, admin=True):
         """Calls the API to create the contact details."""
         self.client.force_authenticate(user=self.admin_user if admin else self.user)
-        return self.client.post('/en/api/admin/booking/create', self.booking_attrs)
+        return self.client.post(reverse('api_booking_create'), self.booking_attrs)
 
     def test_01_create_booking_without_permission(self):
         """Tries to create a booking without permission."""
         response = self._send_create_request(admin=False)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_02_create_booking(self):
         """Tests creating a booking."""
         initial_count = Booking.objects.count()
         response = self._send_create_request()
-        if response.status_code != 201:  # if we could not create the booking data
+        if response.status_code != status.HTTP_201_CREATED:  # if we could not create the booking data
             print(response.data)
         self.assertEqual(Booking.objects.count(), initial_count + 1)
         for attr, expected_value in self.booking_attrs.items():
@@ -372,14 +367,14 @@ class BookingAPITestCase(APITestCase):
         """Tries to list the bookings (using the API) without permission."""
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/en/api/admin/bookings')
-        self.assertEqual(response.status_code, 403)
+        response = self.client.get(reverse('api_bookings'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_04_list_bookings(self):
         """Tests listing the bookings, using the API."""
         self._send_create_request()
         bookings_count = Booking.objects.count()
-        response = self.client.get('/en/api/admin/bookings')
+        response = self.client.get(reverse('api_bookings'))
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], bookings_count)
@@ -391,7 +386,7 @@ class BookingAPITestCase(APITestCase):
         bookings_count = Booking.objects.count()
         self.booking_attrs['date'] = datetime.datetime.strptime('2000-01-01', '%Y-%m-%d')
         self._send_create_request()
-        response = self.client.get('/en/api/admin/bookings', {'active': True})
+        response = self.client.get(reverse('api_bookings'), {'active': True})
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], bookings_count)
@@ -404,7 +399,7 @@ class BookingAPITestCase(APITestCase):
         bookings_count = Booking.objects.count()
         self.booking_attrs['cancelled'] = False
         self._send_create_request()
-        response = self.client.get('/en/api/admin/bookings', {'cancelled': True})
+        response = self.client.get(reverse('api_bookings'), {'cancelled': True})
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], bookings_count)
@@ -420,7 +415,7 @@ class BookingAPITestCase(APITestCase):
         self._send_create_request()
         self.booking_attrs['date'] = datetime.datetime.strptime('2000-01-01', '%Y-%m-%d')
         self._send_create_request()
-        response = self.client.get('/en/api/admin/bookings', {'active': True, 'cancelled': False})
+        response = self.client.get(reverse('api_bookings'), {'active': True, 'cancelled': False})
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], bookings_count)
@@ -437,40 +432,40 @@ class BookingAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse('api_cancel_booking', args=(booking.id,)))
         cancelled_booking = Booking.objects.get(id=booking.id)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertNotEquals(original_cancelled, cancelled_booking.cancelled)
 
     def test_09_list_free_booking_slots(self):
         """Tests listing the free booking slots for a given day."""
         self._create_contact()
-        response = self.client.get('/en/api/booking/free_booking_slots',
+        response = self.client.get(reverse('api_free_booking_slots'),
                                    {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
                                                                   '%Y-%m-%d'),
                                     'service_id': self.service.id})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-        self.assertIn(['12:00', '12:00'], response_data.get('booking_slots'))
+        self.assertIn(['12:00', '12:00 - 13:00'], response_data.get('booking_slots'))
         self.booking_attrs['time'] = '12:00:00'
         self._send_create_request()
-        response = self.client.get('/en/api/booking/free_booking_slots',
+        response = self.client.get(reverse('api_free_booking_slots'),
                                    {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
                                                                   '%Y-%m-%d'),
                                     'service_id': self.service.id})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
-        self.assertNotIn(['12:00', '12:00'], response_data.get('booking_slots'))
+        self.assertNotIn(['12:00', '12:00 - 13:00'], response_data.get('booking_slots'))
 
     def test_10_booking_slots_for_closed_day(self):
         """Tests listing the free booking slots for a closed day."""
         self._create_contact()
         today_weekday = datetime.date.today().weekday()
         delta_to_sunday = (6 - today_weekday) % 6
-        response = self.client.get('/en/api/booking/free_booking_slots',
+        response = self.client.get(reverse('api_free_booking_slots'),
                                    {'day': datetime.date.strftime(datetime.date.today() +
                                                                   datetime.timedelta(days=delta_to_sunday),
                                                                   '%Y-%m-%d'),
                                     'service_id': self.service.id})
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         self.assertIn(['', 'Closed'], response_data.get('booking_slots'))
 
@@ -488,14 +483,14 @@ class UserAPITestCase(APITestCase):
     def test_01_list_users_without_permission(self):
         """Tries to list the users (using the API) without permission."""
         self.client.force_authenticate(user=self.user)
-        response = self.client.get('/en/api/admin/users')
-        self.assertEqual(response.status_code, 403)
+        response = self.client.get(reverse('api_users'))
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_02_list_bookings(self):
         """Tests listing the users, using the API."""
         self.client.force_authenticate(user=self.admin_user)
         users_count = CustomUser.objects.count()
-        response = self.client.get('/en/api/admin/users')
+        response = self.client.get(reverse('api_users'))
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
         self.assertEqual(response.data['count'], users_count)
@@ -517,7 +512,7 @@ class UserAPITestCase(APITestCase):
         """Tests cancelling a user without permission."""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse('api_cancel_user', args=(self.user.id,)), follow=True)
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_05_cancel_user(self):
         """Tests cancelling a user."""
@@ -526,7 +521,7 @@ class UserAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
         response = self.client.get(reverse('api_cancel_user', args=(self.user.id,)))
         cancelled_user = CustomUser.objects.get(id=self.user.id)
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertNotEquals(original_is_active, cancelled_user.is_active)
 
 
@@ -609,6 +604,8 @@ class BaseViewTestCase(TestCase):
             pattern = r'<a class="menu_item" href="(.*)">' + menu_item + r'</a>'
             match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
             self.assertIsNotNone(match)
+        # changing the language back to English
+        response = self.client.get('/en', follow=True)
 
 
 class HomeTestCase(TestCase):
@@ -619,7 +616,7 @@ class HomeTestCase(TestCase):
     def test_01_home_rendering(self):
         """Tests that the home view is rendered successfully and the correct template is used."""
         response = self.client.get(reverse('home'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'home.html')
 
 
@@ -635,7 +632,7 @@ class LogInTestCase(TestCase):
     def test_01_login_rendering(self):
         """Tests that the login view is rendered successfully and the correct template is used."""
         response = self.client.get(reverse('login'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'login.html')
 
     def test_02_successful_login(self):
@@ -685,7 +682,7 @@ class SignUpTestCase(TestCase):
     def test_01_signup_rendering(self):
         """Tests that the signup view is rendered successfully and the correct template is used."""
         response = self.client.get(reverse('signup'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'signup.html')
 
     def test_02_successful_signup(self):
@@ -720,13 +717,13 @@ class PersonalDataTestCase(TestCase):
     def test_01_personal_data_not_displayed_when_not_logged_in(self):
         """Tests that personal is not displayed when user is not logged in."""
         response = self.client.get(reverse('personal_data'))
-        self.assertRedirects(response, '/en/login?next=/en/personal_data')
+        self.assertRedirects(response, reverse('login') + '?next=' + reverse('personal_data'))
 
     def test_02_personal_data_displayed_when_logged_in(self):
         """Tests that personal is displayed when user is logged in."""
         self.client.force_login(user=self.user)
         response = self.client.get(reverse('personal_data'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'personal_data.html')
 
     def test_03_personal_data_empty_fields(self):
@@ -768,7 +765,7 @@ class ContactViewTestCase(TestCase):
     def test_01_contact_rendering(self):
         """Tests that the contacat view is rendered successfully and the correct template is used."""
         response = self.client.get(reverse('contact'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'contact.html')
 
     def test_02_contact_details_displayed(self):
@@ -777,7 +774,8 @@ class ContactViewTestCase(TestCase):
         self.assertContains(response, '<td>+36991234567</td>')
         self.assertContains(response, '<td>somebody@mail.com</td>')
         self.assertContains(response, '<td>Happiness Street 1, HappyCity, 99999</td>')
-        self.assertContains(response, 'src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses"')
+        self.assertContains(response,
+                            'src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses"')
         html_content = response.content.decode('utf-8')
         pattern = r'<td>(.*)Closed(.*)</td>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
@@ -798,7 +796,7 @@ class GalleryViewTestCase(TestCase):
     def test_01_gallery_rendering(self):
         """Tests that the gallery view is rendered successfully and the correct template is used."""
         response = self.client.get(reverse('gallery'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'gallery.html')
 
 
@@ -840,7 +838,7 @@ class ServiceViewTestCase(TestCase):
     def test_01_service_list_rendering(self):
         """Tests that the services view is rendered successfully and the correct template is used."""
         response = self.client.get(reverse('services'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'services.html')
 
     def test_02_service_box_is_displayed(self):
@@ -854,8 +852,8 @@ class ServiceViewTestCase(TestCase):
 
     def test_03_service_rendering(self):
         """Tests that the service view is rendered successfully and the correct template is used."""
-        response = self.client.get(reverse('service', args=(self.service.id, )))
-        self.assertEqual(response.status_code, 200)
+        response = self.client.get(reverse('service', args=(self.service.id,)))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'service.html')
 
     def test_04_service_is_displayed(self):
@@ -872,7 +870,7 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button" href(.*)style="pointer-events: none;opacity: 0.60;"(.*)Book(.*)</a>'
+        pattern = r'<a class="a_button green_button" href(.*)style="pointer-events: none;opacity: 0.45;"(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -882,10 +880,10 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button" href(.*)style="pointer-events: none;opacity: 0.60;"(.*)Book(.*)</a>'
+        pattern = r'<a class="a_button green_button" href(.*)style="pointer-events: none;opacity: 0.45;"(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
-        pattern = r'<a class="a_button" href(.*)Book(.*)</a>'
+        pattern = r'<a class="a_button green_button" href(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -919,7 +917,7 @@ class AdminAPIViewTestCase(TestCase):
         """Tests that the view is not displayed for users that are not staff or admin."""
         self._login(admin=False)
         response = self.client.get(reverse('admin_api'))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         html_content = response.content.decode('utf-8')
         pattern = r'<a class="menu_item" href="(.*)">Admin API</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
@@ -938,13 +936,13 @@ class AdminAPIViewTestCase(TestCase):
         """Tests that the admin api view is rendered successfully and the correct template is used."""
         self._login(admin=True)
         response = self.client.get(reverse('admin_api'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'admin_api.html')
 
     def test_04_not_displayed_when_not_logged_in(self):
         """Tests that the view is not displayed when the user is not logged in."""
         response = self.client.get(reverse('admin_api'))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_05_service_update_destroy_button_disabled_when_no_selected(self):
         """Tests that the Update/Delete button is not enabled until a service is selected from the list."""
@@ -1009,7 +1007,7 @@ class BookingViewTestCase(TestCase):
         }
         with open(photo_path, 'rb') as photo_data:
             service_attrs['photo'] = photo_data
-            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+            response = self.client.post(reverse('api_service_create'), service_attrs, format='multipart')
         try:
             created_service = Service.objects.last()
             os.remove(created_service.photo.path)
@@ -1038,21 +1036,21 @@ class BookingViewTestCase(TestCase):
             'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
         }
         self.client.force_login(user=self.admin_user)
-        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+        return self.client.post(reverse('api_contact_create'), contact_attrs)
 
     def test_01_booking_rendering(self):
         """Tests that the booking view is rendered successfully and the correct template is used."""
         self._login()
         response = self.client.get(reverse('booking', args=(self.service.id,)))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'booking.html')
 
     def test_02_booking_when_not_logged_in(self):
         """Tests that the booking view is not available for users not logged in."""
         self.client.logout()
         response = self.client.get(reverse('booking', args=(self.service.id,)))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/en/login?next=/en/service/{}/booking'.format(self.service.id))
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertRedirects(response, reverse('login') + '?next=' + reverse('booking', args=(self.service.id,)))
 
     def test_03_booking_not_available_without_comment(self):
         """Tests that the booking is not available without a comment."""
@@ -1060,7 +1058,8 @@ class BookingViewTestCase(TestCase):
         self.client.get(reverse('booking', args=(self.service.id,)))
         response = self.client.post(reverse('booking', args=(self.service.id,)),
                                     {'dog_size': 'medium',
-                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+                                                                    '%Y-%m-%d'),
                                      'time': '08:00',
                                      'comment': '',
                                      })
@@ -1073,7 +1072,8 @@ class BookingViewTestCase(TestCase):
         self.client.get(reverse('booking', args=(self.service.id,)))
         response = self.client.post(reverse('booking', args=(self.service.id,)),
                                     {'dog_size': 'medium',
-                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+                                     'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+                                                                    '%Y-%m-%d'),
                                      'time': '',
                                      'comment': 'My dog is a Golden and I would like to have it bathed.',
                                      })
@@ -1131,7 +1131,7 @@ class UserBookingsViewTestCase(TestCase):
         }
         with open(photo_path, 'rb') as photo_data:
             service_attrs['photo'] = photo_data
-            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+            response = self.client.post(reverse('api_service_create'), service_attrs, format='multipart')
         try:
             created_service = Service.objects.last()
             os.remove(created_service.photo.path)
@@ -1160,7 +1160,7 @@ class UserBookingsViewTestCase(TestCase):
             'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
         }
         self.client.force_login(user=self.admin_user)
-        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+        return self.client.post(reverse('api_contact_create'), contact_attrs)
 
     def _create_booking(self):
         """Calls the API to create a booking."""
@@ -1181,15 +1181,15 @@ class UserBookingsViewTestCase(TestCase):
         """Tests that the user bookings view is rendered successfully and the correct template is used."""
         self._login()
         response = self.client.get(reverse('user_bookings'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'user_bookings.html')
 
     def test_02_user_bookings_when_not_logged_in(self):
         """Tests that the user bookings view is not available for users not logged in."""
         self.client.logout()
         response = self.client.get(reverse('user_bookings'))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/en/login?next=/en/my_bookings')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertRedirects(response, reverse('login') + '?next=' + reverse('user_bookings'))
 
     def test_03_booking_box_is_displayed(self):
         """Tests that the booking box is displayed indeed in the User Bookings view."""
@@ -1262,7 +1262,7 @@ class AdminBookingsViewTestCase(TestCase):
         }
         with open(photo_path, 'rb') as photo_data:
             service_attrs['photo'] = photo_data
-            response = self.client.post('/en/api/admin/service/create', service_attrs, format='multipart')
+            response = self.client.post(reverse('api_service_create'), service_attrs, format='multipart')
         try:
             created_service = Service.objects.last()
             os.remove(created_service.photo.path)
@@ -1291,7 +1291,7 @@ class AdminBookingsViewTestCase(TestCase):
             'google_maps_url': 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2726.2653641484812!2d19.65391067680947!3d46.89749933667435!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4743d09cb06aa0cd%3A0xc162d3291067ef90!2sBennett%20Kft.%20Sz%C3%A9kt%C3%B3i%20kutyaszalon!5e0!3m2!1sen!2ses!4v1696190559457!5m2!1sen!2ses'
         }
         self._login(admin=True)
-        return self.client.post('/en/api/admin/contact/create', contact_attrs)
+        return self.client.post(reverse('api_contact_create'), contact_attrs)
 
     def _create_booking(self, cancelled=False):
         """Calls the API to create a booking."""
@@ -1322,21 +1322,21 @@ class AdminBookingsViewTestCase(TestCase):
         """Tests that the admin bookings view is rendered successfully and the correct template is used."""
         self._login()
         response = self.client.get(reverse('admin_bookings'))
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'admin_bookings.html')
 
     def test_02_admin_bookings_when_not_logged_in(self):
         """Tests that the admin bookings view is not available for users not logged in."""
         self.client.logout()
         response = self.client.get(reverse('admin_bookings'))
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/en/login?next=/en/bookings')
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+        self.assertRedirects(response, reverse('login') + '?next=' + reverse('admin_bookings'))
 
     def test_03_admin_bookings_when_not_staff(self):
         """Tests that the admin bookings view is only available for staff users."""
         self._login(admin=False)
         response = self.client.get(reverse('admin_bookings'))
-        self.assertEqual(response.status_code, 403)
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_04_booking_box_is_displayed(self):
         """Tests that the booking box is displayed indeed in the Admin Bookings view."""
@@ -1419,7 +1419,10 @@ class AdminBookingsViewTestCase(TestCase):
         """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
         self.cancelled_booking = self._create_booking(cancelled=True)
         self._login()
-        response = self.client.post(reverse('admin_bookings'), {'booking_date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+        response = self.client.post(reverse('admin_bookings'), {'booking_date':
+                                                                    datetime.date.strftime(datetime.date.today() +
+                                                                                           datetime.timedelta(days=1),
+                                                                                           '%Y-%m-%d'),
                                                                 'cancelled': 'cancelled',
                                                                 'submit_search': 'Search'},
                                     follow=True)
@@ -1437,7 +1440,10 @@ class AdminBookingsViewTestCase(TestCase):
         """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
         self.cancelled_booking = self._create_booking(cancelled=True)
         self._login()
-        response = self.client.post(reverse('admin_bookings'), {'booking_date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=2), '%Y-%m-%d'),
+        response = self.client.post(reverse('admin_bookings'), {'booking_date':
+                                                                    datetime.date.strftime(datetime.date.today() +
+                                                                                           datetime.timedelta(days=2),
+                                                                                           '%Y-%m-%d'),
                                                                 'cancelled': 'cancelled',
                                                                 'submit_search': 'Search'},
                                     follow=True)

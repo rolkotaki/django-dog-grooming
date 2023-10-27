@@ -126,6 +126,12 @@ html, body {
   font-size: 15px;
 }
 
+#user_dropdown_content p {
+  font-size: 15px;
+  height: 18px;
+  margin: 8px 3px 5px 3px;
+}
+
 #user_dropdown:hover #user_dropdown_content {
   display: block;
 }
@@ -150,7 +156,7 @@ html, body {
 }
 
 .content_services {
-  margin-top: 40px;
+  margin-top: 20px;
 }
 
 .content_bookings {
@@ -158,10 +164,16 @@ html, body {
 }
 
 .service_box {
-  width: 225px;
-  height: 280px;
-  padding: 10px;
-  padding-bottom: 35px;
+  width: 220px;
+  max-height: 320px;
+  padding: 5px;
+  margin: 5px;
+  border: 1px solid #DFE7ED;
+  border-radius: 0.4rem;
+}
+
+.service_box:hover {
+  box-shadow: 0 0 10px 0 #007bff;
 }
 
 .service_box a {
@@ -170,8 +182,8 @@ html, body {
 }
 
 .service_box_image {
-  max-width: 225px;
-  max-height: 200px;
+  max-width: 210px;
+  max-height: 190px;
   height: auto;
   width: auto;
   margin: 0px;
@@ -194,6 +206,7 @@ html, body {
   -webkit-line-clamp: 3;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding: 0px 5px;
 }
 
 .content_service, .content_booking, .content_user_form, .content_contact {
@@ -241,7 +254,8 @@ html, body {
 .a_button {
   background-color: white;
   color: black;
-  border: 2px solid green;
+  border: 2px solid black;
+  border-radius: 0.3rem;
   padding: 10px 20px;
   text-align: center;
   text-decoration: none;
@@ -250,17 +264,8 @@ html, body {
   font-size: 16px;
 }
 
-.back_button {
-  border: 2px solid #333;
-}
-
 .a_button:hover, .a_button:active {
   background-color: green;
-  color: white;
-}
-
-.back_button:hover, .back_button:active {
-  background-color: grey;
   color: white;
 }
 
@@ -282,26 +287,46 @@ html, body {
   //width: 520px;
 }
 
-.booking_form .text_input {
-  width: 500px;
-  margin-bottom: 10px;
-}
-
 .user_form {
   width: 280px;
 }
 
-.user_form .user_form_text_input {
+.user_form_text_input {
   width: 260px;
+  padding: 0.375rem 0.75rem;
+  margin-top: 5px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #495057;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
 }
 
-.booking_form .date_input {
+.date_input, .select_input, .text_input {
+  padding: 0.35rem 0.5rem;
+  margin-top: 5px;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #495057;
+  background-clip: padding-box;
+  border: 1.5px solid #ced4da;
+  border-radius: 0.25rem;
   width: 160px;
 }
 
-.booking_form .time_input {
+.select_input {
   width: 120px;
-  height: 22px;
+}
+
+.text_input {
+  width: 500px;
+  margin-bottom: 10px;
+}
+
+.user_form_text_input:focus, .date_input:focus, .select_input:focus, .text_input:focus {
+  outline: none;
+  box-shadow: 0 0 5px 0 #007bff;
 }
 
 .login_signup_errors {
@@ -370,8 +395,13 @@ html, body {
   height: 170px;
   padding: 3px;
   margin: 5px;
-  border-style: groove;
+  border: 1px solid #ced4da;
+  border-radius: 0.25rem;
   cursor: pointer;
+}
+
+.image_box:hover {
+  box-shadow: 0 0 8px 0 #007bff;
 }
 
 .image_in_box {
@@ -424,36 +454,47 @@ html, body {
 }
 
 .green_button {
-  background-color: green;
+  background-color: #33b249;
   color: white;
-  border: 2px solid green;
+  border: 2px solid #33b249;
 }
 
 .blue_button {
-  background-color: blue;
+  background-color: #4681f4;
   color: white;
-  border: 2px solid blue;
+  border: 2px solid #4681f4;
 }
 
 .red_button {
-  background-color: red;
+  background-color: #f44336;
   color: white;
-  border: 2px solid red;
+  border: 2px solid #f44336;
+}
+
+.grey_button {
+  background-color: grey;
+  color: white;
+  border: 2px solid grey;
 }
 
 .green_button:hover, .green_button:active {
   background-color: white;
-  color: green;
+  color: #33b249;
 }
 
 .blue_button:hover, .blue_button:active {
   background-color: white;
-  color: blue;
+  color: #4681f4;
 }
 
 .red_button:hover, .red_button:active {
   background-color: white;
-  color: red;
+  color: #f44336;
+}
+
+.grey_button:hover, .grey_button:active {
+  background-color: white;
+  color: grey;
 }
 
 .div_admin_api {
@@ -493,4 +534,8 @@ html, body {
   top: 120px;
   left: 10px;
   z-index: 9;
+}
+
+#hi_username {
+  color: #495057;
 }

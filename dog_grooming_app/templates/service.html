@@ -27,7 +27,7 @@
         {% if service.price_small is not None or service.price_big is not None %}
             <div class="service_option" >
                 <label for="dog_size">{% trans 'Dog size:' %}</label>
-                <select name="dog_size" id="dog_size" onchange="changePrice(this)">
+                <select class="select_input" name="dog_size" id="dog_size" onchange="changeBookingPriceForDogSize(this)">
                     {% if service.price_small is not None %}<option value="small">{% trans 'small' %}</option>{% endif %}
                     <option value="medium" selected >{% trans 'medium' %}</option>
                     {% if service.price_big is not None %}<option value="big">{% trans 'big' %}</option>{% endif %}
@@ -50,13 +50,13 @@
             {% endblocktranslate %}
         </p>
         <div class="service_buttons">
-            <a class="a_button" href="{% url 'booking' service_id=service.id %}"
+            <a class="a_button green_button" href="{% url 'booking' service_id=service.id %}"
                 {% if not user.is_authenticated %}
-                    style="pointer-events: none;opacity: 0.60;"
+                    style="pointer-events: none;opacity: 0.45;"
                 {% endif %}>
                 {% trans 'Book' %}
             </a>
-            <a class="a_button back_button" onclick="history.back()">{% trans 'Back' %}</a>
+            <a class="a_button grey_button" href="{% url 'services' %}">{% trans 'Back' %}</a>
         </div>
         {% if not user.is_authenticated %}
         <p class="italic">{% trans 'Log in to book!' %}</p>
@@ -65,15 +65,5 @@
     </div>
 
 </div>
-
-<script>
-    function changePrice(element) {
-        var value = element.value
-        document.getElementById("small").style.display = "none";
-        document.getElementById("medium").style.display = "none";
-        document.getElementById("big").style.display = "none";
-        document.getElementById(value).style.display = "block";
-    }
-</script>
 
 {% endblock %}

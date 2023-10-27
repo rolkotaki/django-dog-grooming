@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.core.validators import RegexValidator
+
+from .constants import PHONE_NUMBER_VALIDATOR
 
 
 class CustomUser(AbstractUser):
@@ -9,7 +12,8 @@ class CustomUser(AbstractUser):
     CustomUser inherits from AbstractUser from Django's authentication package. We extend the existing model
     with the phone number.
     """
-    phone_number = models.CharField(max_length=20)
+    phone_number = models.CharField(max_length=20, validators=[RegexValidator(regex=PHONE_NUMBER_VALIDATOR,
+                                                                              message=_('Enter a valid phone number.'))])
 
 
 class Contact(models.Model):

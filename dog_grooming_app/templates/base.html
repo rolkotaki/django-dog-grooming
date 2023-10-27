@@ -8,7 +8,11 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        <link rel="stylesheet" media="all" href="{% static 'style.css' %}">
+        <link rel="stylesheet" media="all" href="{% static 'style/style.css' %}">
+        <link rel="icon" type="image/x-icon" href="{% static 'logo.jpg' %}">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script type="text/javascript" src="{% static 'js/dog_grooming_app.js' %}"></script>
+
         <title>{% trans 'Emma Dog Grooming' %}</title>
     </head>
 
@@ -55,6 +59,7 @@
                 <div id="user_dropdown" class="menu_item_right">
                     <button class="dropdown_button">{% trans 'My Profile' %}</button>
                     <div id="user_dropdown_content">
+                        <p id="hi_username">{% blocktranslate with username=user.username %}Hi {{ username }}!{% endblocktranslate %}</p>
                         <a href="{% url 'personal_data' %}">{% trans 'Personal data' %}</a>
                         <a href="{% url 'change_password' %}">{% trans 'Change password' %}</a>
                         {% if user.is_staff %}
@@ -62,7 +67,7 @@
                         {% else %}
                             <a href="{% url 'user_bookings' %}">{% trans 'My bookings' %}</a>
                         {% endif %}
-                        <a href="user/logout">{% trans 'Log out' %}</a>
+                        <a href="/user/logout">{% trans 'Log out' %}</a>
                     </div>
                 </div>
                 {% else %}

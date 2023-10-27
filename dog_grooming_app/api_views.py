@@ -20,7 +20,7 @@ from rest_framework import status
 from .serializers import ContactSerializer, ServiceSerializer, ServiceUpdateDeleteSerializer, BookingCreateSerializer, \
     BookingSerializer, CustomUserSerializer
 from .models import Contact, Service, Booking, CustomUser
-from .utils import get_free_booking_slots, cancel_booking, cancel_user
+from .utils import get_available_booking_slots, cancel_booking, cancel_user
 
 
 class ContactCreate(CreateAPIView):
@@ -186,7 +186,7 @@ class ListFreeTimeSlots(APIView):
         service_id = request.query_params.get('service_id', None)
         if not day or not service_id:
             return Response({'message': _('Incorrect day or service_id')}, status=status.HTTP_400_BAD_REQUEST)
-        booking_slots = get_free_booking_slots(day=day, service_id=service_id)
+        booking_slots = get_available_booking_slots(day=day, service_id=service_id)
         response_data = {
             'message': _('These are the free booking slots'),
             'booking_slots': booking_slots

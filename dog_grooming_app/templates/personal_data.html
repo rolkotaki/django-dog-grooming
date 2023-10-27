@@ -13,7 +13,7 @@
             {% csrf_token %}
             {% for field in form %}
                 <p>
-                    {{ field.label_tag }} {{ field|add_class:"user_form_text_input" }}
+                    {{ field.label_tag }} {{ field | add_class:"user_form_text_input" }}
                     {% if field.errors %}
                     <ul class="error_list">
                         {% for error in field.errors %}
@@ -25,8 +25,8 @@
             {% endfor %}
 
             <div class="form_buttons">
-                <input class="a_button input_button" type="submit" value="{% trans 'Update' %}" />
-                <a class="a_button back_button" onclick="history.back()">{% trans 'Back' %}</a>
+                <input class="a_button green_button" type="submit" value="{% trans 'Update' %}" />
+                <a class="a_button grey_button" href="{% url 'home' %}">{% trans 'Back' %}</a>
             </div>
         </form>
 

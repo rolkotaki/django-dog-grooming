@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
-from .utils import get_free_booking_slots, upload_image_to_gallery, get_gallery_image_list, delete_image_from_gallery
+from .utils import get_available_booking_slots, upload_image_to_gallery, get_gallery_image_list, delete_image_from_gallery
 
 
 class HomePage(TemplateView):
@@ -204,9 +204,9 @@ def booking(request, service_id):
     View method for the booking.
     """
     service = Service.objects.get(id=service_id)
-    free_booking_slots = get_free_booking_slots(datetime.date.today() + datetime.timedelta(days=1), service.id)
+    available_booking_slots = get_available_booking_slots(datetime.date.today() + datetime.timedelta(days=1), service.id)
     if request.method == 'GET':
-        form = BookingForm(free_booking_slots=free_booking_slots)
+        form = BookingForm(available_booking_slots=available_booking_slots)
         return render(request, "booking.html", {'form': form, 'service': service})
 
     if request.method == 'POST':
@@ -229,7 +229,7 @@ def booking(request, service_id):
             booking.save()
             messages.success(request, _("Your booking has been successful."))
             return redirect('booking', service_id=service.id)
-        form = BookingForm(request.POST, free_booking_slots=free_booking_slots)
+        form = BookingForm(request.POST, available_booking_slots=available_booking_slots)
         return render(request, "booking.html", {'form': form, 'service': service})
 
 
