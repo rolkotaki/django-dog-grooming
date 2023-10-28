@@ -81,12 +81,12 @@ html, body {
 }
 
 #topnav a:hover {
-  background-color: #ddd;
-  color: black;
+  background-color: #70A7D1;
+  color: white;
 }
 
-#topnav a:active {
-  background-color: #4CAF50;
+#topnav .active_menu {
+  background-color: #70A7D1;
   color: white;
 }
 
@@ -95,7 +95,7 @@ html, body {
 }
 
 .dropdown_button {
-  font-size: 16px;
+  font-size: 17px;
   border: none;
   outline: none;
   color: #f2f2f2;
@@ -105,8 +105,8 @@ html, body {
 }
 
 #user_dropdown a:hover, #user_dropdown:hover .dropdown_button {
-  background-color: #ddd;
-  color: black;
+  background-color: #70A7D1;
+  color: white;
 }
 
 #user_dropdown_content {
@@ -495,6 +495,11 @@ html, body {
 .grey_button:hover, .grey_button:active {
   background-color: white;
   color: grey;
+}
+
+.disabled_button {
+  pointer-events: none;
+  opacity: 0.45;
 }
 
 .div_admin_api {

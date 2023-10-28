@@ -37,10 +37,10 @@
                     <table>
                         <tr>
                             <td>
-                                <span><a href="/hu"><img class="lang_image" src="{% static 'hun.png' %}"></a></span>
+                                <span><a href="/hu/{{request.get_full_path|slice:'4:'}}"><img class="lang_image" src="{% static 'hun.png' %}"></a></span>
                             </td>
                             <td>
-                                <span><a href="/en"><img class="lang_image" src="{% static 'uk.png' %}"></a></span>
+                                <span><a href="/en/{{request.get_full_path|slice:'4:'}}"><img class="lang_image" src="{% static 'uk.png' %}"></a></span>
                             </td>
                         </tr>
                     </table>
@@ -48,31 +48,31 @@
             </div>
 
             <div id="topnav">
-                <a class="menu_item" href="{% url 'home' %}">{% trans 'Home' %}</a>
-                <a class="menu_item" href="{% url 'services' %}">{% trans 'Services' %}</a>
-                <a class="menu_item" href="{% url 'gallery' %}">{% trans 'Gallery' %}</a>
-                <a class="menu_item" href="{% url 'contact' %}">{% trans 'Contact' %}</a>
+                <a id="nav_home" class="menu_item" href="{% url 'home' %}">{% trans 'Home' %}</a>
+                <a id="nav_services" class="menu_item" href="{% url 'services' %}">{% trans 'Services' %}</a>
+                <a id="nav_gallery" class="menu_item" href="{% url 'gallery' %}">{% trans 'Gallery' %}</a>
+                <a id="nav_contact" class="menu_item" href="{% url 'contact' %}">{% trans 'Contact' %}</a>
                 {% if user.is_authenticated and user.is_staff %}
-                    <a class="menu_item" href="{% url 'admin_api' %}">{% trans 'Admin API' %}</a>
+                    <a id="nav_admin_api" class="menu_item" href="{% url 'admin_api' %}">{% trans 'Admin API' %}</a>
                 {% endif %}
                 {% if user.is_authenticated %}
                 <div id="user_dropdown" class="menu_item_right">
-                    <button class="dropdown_button">{% trans 'My Profile' %}</button>
+                    <button id="user_dropdown_button" class="dropdown_button">{% trans 'My Profile' %}</button>
                     <div id="user_dropdown_content">
                         <p id="hi_username">{% blocktranslate with username=user.username %}Hi {{ username }}!{% endblocktranslate %}</p>
-                        <a href="{% url 'personal_data' %}">{% trans 'Personal data' %}</a>
+                        <a id="nav_personal_data" href="{% url 'personal_data' %}">{% trans 'Personal data' %}</a>
                         <a href="{% url 'change_password' %}">{% trans 'Change password' %}</a>
                         {% if user.is_staff %}
-                            <a href="{% url 'admin_bookings' %}">{% trans 'Bookings' %}</a>
+                            <a id="nav_admin_bookings" href="{% url 'admin_bookings' %}">{% trans 'Bookings' %}</a>
                         {% else %}
-                            <a href="{% url 'user_bookings' %}">{% trans 'My bookings' %}</a>
+                            <a id="nav_user_bookings" href="{% url 'user_bookings' %}">{% trans 'My bookings' %}</a>
                         {% endif %}
                         <a href="/user/logout">{% trans 'Log out' %}</a>
                     </div>
                 </div>
                 {% else %}
-                <a class="menu_item_right" href="{% url 'login' %}">{% trans 'Log In' %}</a>
-                <a class="menu_item_right" href="{% url 'signup' %}">{% trans 'Sign Up' %}</a>
+                <a id="nav_login" class="menu_item_right" href="{% url 'login' %}">{% trans 'Log In' %}</a>
+                <a id="nav_signup" class="menu_item_right" href="{% url 'signup' %}">{% trans 'Sign Up' %}</a>
                 {% endif %}
             </div>
 
