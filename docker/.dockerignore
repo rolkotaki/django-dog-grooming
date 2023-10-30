@@ -1,0 +1,7 @@
+**/docker/
+**/.idea/
+**/env/
+**/.git/
+**/.gitignore
+**/config.yml
+**/.DS_Store

@@ -1,0 +1,44 @@
+version: '1'
+services:
+  postgres:
+    container_name: postgres-container
+    image: postgres:latest
+    environment:
+      POSTGRES_DB: dog_grooming_website
+      POSTGRES_USER: dog_grooming_user
+      POSTGRES_PASSWORD: yoursecretpassword
+    ports:
+      - "5433:5432"
+      # The django-app container will be able to connect to the postgres container without setting this.
+      # You only have to map the port if you want to use it on your localhost.
+      # As I already have postgres on my local running on 5432, I map it to 5433.
+    volumes:
+      - ./docker/init_db.sql:/docker-entrypoint-initdb.d/init_db.sql
+      - ./docker/postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d $${POSTGRES_DB} -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  django-app:
+    container_name: django-app-container
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      POSTGRES_PASSWORD: yoursecretpassword
+      DB_HOST: postgres
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: curl --fail http://localhost:8000 || exit 1
+      interval: 10s
+      timeout: 10s
+      start_period: 10s
+      retries: 10

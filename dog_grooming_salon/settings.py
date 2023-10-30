@@ -86,8 +86,8 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'dog_grooming_website',
         'USER': 'dog_grooming_user',
-        'PASSWORD': load_config('postgresql_password'),
-        'HOST': 'localhost',
+        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', load_config('postgresql_password')),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),  # TODO: change localhost
         'PORT': '5432',
         'TEST': {
             'NAME': 'dog_grooming_website_test'
