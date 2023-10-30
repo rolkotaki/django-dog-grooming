@@ -11,7 +11,8 @@ class LoginForm(forms.Form):
     """
     Login form class.
     """
-    username = forms.CharField(required=True, max_length=150, label=_('Username'))
+    username = forms.CharField(required=True, max_length=150, label=_('Username'),
+                               widget=forms.TextInput(attrs={'autofocus': True}))
     password = forms.CharField(max_length=50, widget=forms.PasswordInput, label=_('Password'))
 
 
@@ -19,7 +20,8 @@ class SignUpForm(UserCreationForm):
     """
     SignUp form class.
     """
-    first_name = forms.CharField(required=True, max_length=150, label=_('First name'))
+    first_name = forms.CharField(required=True, max_length=150, label=_('First name'),
+                                 widget=forms.TextInput(attrs={'autofocus': True}))
     last_name = forms.CharField(required=True, max_length=150, label=_('Last name'))
     email = forms.EmailField(required=True, max_length=254, widget=forms.EmailInput(attrs={'class': 'validate', }))
     phone_number = forms.CharField(required=True, max_length=20, label=_('Phone number'),
@@ -35,7 +37,8 @@ class PersonalDataForm(forms.Form):
     """
     Personal Data form class.
     """
-    first_name = forms.CharField(required=True, max_length=150, label=_('First name'))
+    first_name = forms.CharField(required=True, max_length=150, label=_('First name'),
+                                 widget=forms.TextInput(attrs={'autofocus': True}))
     last_name = forms.CharField(required=True, max_length=150, label=_('Last name'))
     email = forms.EmailField(required=True, max_length=254, widget=forms.EmailInput(attrs={'class': 'validate', }))
     phone_number = forms.CharField(required=True, max_length=20, label=_('Phone number'),

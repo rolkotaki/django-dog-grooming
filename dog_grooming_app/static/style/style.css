@@ -281,6 +281,17 @@ html, body {
 
 .form_buttons {
   text-align: center;
+  min-width: 280px;
+  display: flex;
+  justify-content: center;
+}
+
+.form_buttons a {
+  margin-left: 5px;
+}
+
+.form_buttons input {
+  margin-left: 10px;
 }
 
 .booking_form {
@@ -288,7 +299,7 @@ html, body {
 }
 
 .user_form {
-  width: 280px;
+  min-width: 280px;
 }
 
 .user_form_text_input {
