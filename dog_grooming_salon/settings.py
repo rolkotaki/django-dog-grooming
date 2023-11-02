@@ -81,16 +81,17 @@ WSGI_APPLICATION = 'dog_grooming_salon.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+db_config = load_config('postgresql_dog_grooming')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dog_grooming_website',
-        'USER': 'dog_grooming_user',
-        'PASSWORD': os.environ.get('POSTGRES_PASSWORD', load_config('postgresql_password')),
-        'HOST': os.environ.get('DB_HOST', 'localhost'),  # TODO: change localhost
-        'PORT': '5432',
+        'NAME': os.environ.get('DB_NAME', db_config.get('name')),
+        'USER': os.environ.get('DB_USER', db_config.get('user')),
+        'PASSWORD': os.environ.get('DB_PASSWORD', db_config.get('password')),
+        'HOST': os.environ.get('DB_HOST', db_config.get('host')),
+        'PORT': os.environ.get('DB_PORT', db_config.get('port')),
         'TEST': {
-            'NAME': 'dog_grooming_website_test'
+            'NAME': db_config.get('test_db_name')
         }
     }
 }
