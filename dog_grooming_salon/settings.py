@@ -85,13 +85,13 @@ db_config = load_config('postgresql_dog_grooming')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DB_NAME', db_config.get('name')),
-        'USER': os.environ.get('DB_USER', db_config.get('user')),
-        'PASSWORD': os.environ.get('DB_PASSWORD', db_config.get('password')),
-        'HOST': os.environ.get('DB_HOST', db_config.get('host')),
-        'PORT': os.environ.get('DB_PORT', db_config.get('port')),
+        'NAME': os.environ.get('DB_NAME', db_config.get('name', '')),
+        'USER': os.environ.get('DB_USER', db_config.get('user', '')),
+        'PASSWORD': os.environ.get('DB_PASSWORD', db_config.get('password', '')),
+        'HOST': os.environ.get('DB_HOST', db_config.get('host', '')),
+        'PORT': os.environ.get('DB_PORT', db_config.get('port', '')),
         'TEST': {
-            'NAME': db_config.get('test_db_name')
+            'NAME': os.environ.get('DB_TEST_NAME', db_config.get('test_db_name', ''))
         }
     }
 }

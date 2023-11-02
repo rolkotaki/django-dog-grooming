@@ -11,6 +11,9 @@ def load_config(config_param):
     To load a config parameter from the config file.
     Returns a single value or a dictionary.
     """
-    with open(CONFIG_FILE) as config_file:
-        config = yaml.safe_load(config_file)
+    try:
+        with open(CONFIG_FILE) as config_file:
+            config = yaml.safe_load(config_file)
+    except FileNotFoundError:
+        return {}
     return config[config_param]
