@@ -19,7 +19,7 @@ jobs:
       DB_TEST_NAME: dog_grooming_website_test
       DB_USER: dog_grooming_user
       DB_PASSWORD: yoursecretpassword
-      DB_HOST: postgres
+      DB_HOST: localhost
       DB_PORT: 5432
     services:
       postgres:
