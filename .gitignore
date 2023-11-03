@@ -7,3 +7,6 @@ dog_grooming_app/media/gallery/*
 !dog_grooming_app/media/services/default.jpg
 !.gitkeep
 docker/postgres_data
+.coverage
+htmlcov
+coverage.xml
