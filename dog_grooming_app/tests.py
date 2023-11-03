@@ -543,7 +543,7 @@ class BaseViewTestCase(TestCase):
         """Tests that the signup option is displayed when user is not logged in."""
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item_right" href="(.*)">Sign Up</a>'
+        pattern = r'<a id="nav_signup" class="menu_item_right" href="(.*)">Sign Up</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -551,7 +551,7 @@ class BaseViewTestCase(TestCase):
         """Tests that the login option is displayed when user is not logged in."""
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item_right" href="(.*)">Log In</a>'
+        pattern = r'<a id="nav_login" class="menu_item_right" href="(.*)">Log In</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -586,7 +586,7 @@ class BaseViewTestCase(TestCase):
         self._login()
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<button class="dropdown_button">My Profile</button>'
+        pattern = r'<button id="user_dropdown_button" class="dropdown_button">My Profile</button>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -595,13 +595,13 @@ class BaseViewTestCase(TestCase):
         response = self.client.get(reverse('home'))
         html_content = response.content.decode('utf-8')
         for menu_item in [_('Home'), _('Services'), _('Gallery'), _('Contact')]:
-            pattern = r'<a class="menu_item" href="(.*)">' + menu_item + r'</a>'
+            pattern = r'<a id="nav_(.*)" class="menu_item(.*)" href="(.*)">' + menu_item + r'</a>'
             match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
             self.assertIsNotNone(match)
         response = self.client.get('/hu', follow=True)
         html_content = response.content.decode('utf-8')
         for menu_item in [_('Home'), _('Services'), _('Gallery'), _('Contact')]:
-            pattern = r'<a class="menu_item" href="(.*)">' + menu_item + r'</a>'
+            pattern = r'<a id="nav_(.*)" class="menu_item" href="(.*)">' + menu_item + r'</a>'
             match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
             self.assertIsNotNone(match)
         # changing the language back to English
@@ -870,7 +870,7 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button green_button" href(.*)style="pointer-events: none;opacity: 0.45;"(.*)Book(.*)</a>'
+        pattern = r'<a class="a_button green_button(.*)disabled_button(.*)" href(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -880,10 +880,10 @@ class ServiceViewTestCase(TestCase):
         response = self.client.get(reverse('service', args=(self.service.id,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button green_button" href(.*)style="pointer-events: none;opacity: 0.45;"(.*)Book(.*)</a>'
+        pattern = r'<a class="a_button green_button(.*)disabled_button(.*)" href(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
-        pattern = r'<a class="a_button green_button" href(.*)Book(.*)</a>'
+        pattern = r'<a class="a_button green_button( ?)" href(.*)Book(.*)</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -928,7 +928,7 @@ class AdminAPIViewTestCase(TestCase):
         self._login(admin=True)
         response = self.client.get(reverse('admin_api'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item" href="(.*)">Admin API</a>'
+        pattern = r'<a id="nav_admin_api" class="menu_item" href="(.*)">Admin API</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
