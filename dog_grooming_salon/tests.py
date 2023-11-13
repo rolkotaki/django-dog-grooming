@@ -22,3 +22,9 @@ class ProjectUtilsTestCase(unittest.TestCase):
             mocked_open.side_effect = FileNotFoundError
             config = load_config()
         self.assertDictEqual(config, {})
+
+    @patch('builtins.open', mock_open())
+    def test_03_load_config_without_config_file_when_none(self):
+        """Tests loading the config file when it does not exist."""
+        config = load_config()
+        self.assertDictEqual(config, {})

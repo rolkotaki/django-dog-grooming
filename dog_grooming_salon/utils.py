@@ -13,6 +13,8 @@ def load_config():
     try:
         with open(CONFIG_FILE) as config_file:
             config = yaml.safe_load(config_file)
+            if not config:
+                return {}
     except FileNotFoundError:
         return {}
     return config
