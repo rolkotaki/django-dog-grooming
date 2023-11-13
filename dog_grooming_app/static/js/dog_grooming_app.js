@@ -17,7 +17,7 @@ $(document).ready(function() {
 });
 
 /**
- * Sets today's date by default to query free booking slots, on the Admin page.
+ * Sets today's date by default to query available booking slots, on the Admin page.
  * Also sets the min and max value of the date input.
  */
 function setInitialDateForAvailableBookingSlotsOnAdminPage() {
@@ -41,16 +41,16 @@ function setServiceUpdateDeleteAPIUrlOnAdminPage(element) {
 }
 
 /**
- * Sets the href value of the link button to get the free booking slots for a specific service, on the Admin page.
+ * Sets the href value of the link button to get the available booking slots for a specific service, on the Admin page.
  */
 function setAvailableBookingSlotsAPIUrlOnAdminPage() {
-    var listFreeBookingSlotsButton = document.getElementById("free_booking_slots_button");
+    var listAvailableBookingSlotsButton = document.getElementById("available_booking_slots_button");
     var dateInput = document.getElementById("date");
     var serviceInput = document.getElementById("service_list");
     if (serviceInput.value != "none") {
-        listFreeBookingSlotsButton.href = "api/booking/free_booking_slots?day=" + dateInput.value + "&service_id=" + serviceInput.value;
+        listAvailableBookingSlotsButton.href = "api/booking/available_booking_slots?day=" + dateInput.value + "&service_id=" + serviceInput.value;
     } else {
-        listFreeBookingSlotsButton.href = "";
+        listAvailableBookingSlotsButton.href = "";
     }
 }
 
@@ -119,7 +119,7 @@ function changeBookingPriceForDogSize(element) {
  */
 function fetchAvailableBookingTimeSlots() {
     $.ajax({
-        url: '/api/booking/free_booking_slots',
+        url: '/api/booking/available_booking_slots',
         type: 'GET',
         data: {day: $('#date').val(), service_id: $('#service_id').val()},
         success: function(response) {

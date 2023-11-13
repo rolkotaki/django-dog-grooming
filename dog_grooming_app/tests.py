@@ -5,13 +5,23 @@ import datetime
 from rest_framework.test import APITestCase
 from rest_framework.test import APIClient
 from rest_framework import status
+from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError as django_ValidationError
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils.translation import gettext as _
+from django.db.utils import Error
+from django.db import models
+from django.contrib import messages
+import django.shortcuts
+from unittest.mock import Mock, patch, mock_open
 
 from .models import CustomUser, Contact, Service, Booking
+from .api_views import CancelUser, CancelBooking, ListAvailableBookingSlots, ServiceRetrieveUpdateDestroy
+from .views import ContactPage, admin_api_page
+from .utils import GalleryManager, BookingManager
 
 
 class ContactAPITestCase(APITestCase):
@@ -58,11 +68,8 @@ class ContactAPITestCase(APITestCase):
     def test_02_create_contact(self):
         """Tests creating the contact details."""
         initial_count = Contact.objects.count()
-        if initial_count == 1:  # we would get an error as we can have only one record
-            return True
         response = self._send_create_request()
-        if response.status_code != status.HTTP_201_CREATED:  # if we could not create the contact data
-            print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Contact.objects.count(), initial_count + 1)
         for attr, expected_value in self.contact_attrs.items():
             self.assertEqual(response.data[attr], expected_value)
@@ -161,8 +168,7 @@ class ServiceAPITestCase(APITestCase):
         """Tests creating a service."""
         initial_count = Service.objects.count()
         response = self._send_create_request()
-        if response.status_code != status.HTTP_201_CREATED:  # if we could not create the service data
-            print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Service.objects.count(), initial_count + 1)
         for attr, expected_value in self.service_attrs.items():
             if attr != 'photo':
@@ -209,14 +215,14 @@ class ServiceAPITestCase(APITestCase):
         self.assertEqual(Service.objects.count(), initial_count - 1)
         self.assertRaises(Service.DoesNotExist, Service.objects.get, id=service.id)
 
-    def test_07_list_servies_without_permission(self):
+    def test_07_list_services_without_permission(self):
         """Tries to list the services (using the API) without permission."""
         self._send_create_request()
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse('api_services'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_08_list_servies(self):
+    def test_08_list_services(self):
         """Tests listing the services, using the API."""
         self._send_create_request()
         services_count = Service.objects.count()
@@ -238,7 +244,19 @@ class ServiceAPITestCase(APITestCase):
         self.assertEqual(response.data['count'], services_count)
         self.assertEqual(len(response.data['results']), services_count)
 
-    def test_10_create_price_only_positive_integer(self):
+    def test_10_list_all_services(self):
+        """Tests listing all the services, including the not active ones."""
+        self._send_create_request()
+        self.service_attrs['active'] = False
+        self._send_create_request()
+        services_count = Service.objects.count()
+        response = self.client.get(reverse('api_services'), {'active': False})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], services_count)
+        self.assertEqual(len(response.data['results']), services_count)
+
+    def test_11_create_price_only_positive_integer(self):
         """Tests that only positive integer prices can be created."""
         self.service_attrs['price_default'] = 0
         response = self._send_create_request()
@@ -255,7 +273,7 @@ class ServiceAPITestCase(APITestCase):
         response = self._send_create_request()
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_11_update_price_only_positive_integer(self):
+    def test_12_update_price_only_positive_integer(self):
         """Tests that prices can be updated only to positive integers."""
         self._send_create_request()
         service = Service.objects.first()
@@ -272,6 +290,18 @@ class ServiceAPITestCase(APITestCase):
                                      format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_13_api_view_update_price_only_positive_integer_(self):
+        """Tests the edge cases where the API view fails because the prices are not integers."""
+        with patch.object(ServiceRetrieveUpdateDestroy, '__init__', return_value=None):
+            srud = ServiceRetrieveUpdateDestroy()
+        request = Mock()
+        request.data = {'price_default': 'a', 'price_small': 1000, 'price_big': 2000}
+        self.assertRaises(ValidationError, srud.update, request=request)
+        request.data = {'price_default': 1000, 'price_small': 'a', 'price_big': 2000}
+        self.assertRaises(ValidationError, srud.update, request=request)
+        request.data = {'price_default': 1000, 'price_small': 1000, 'price_big': 'a'}
+        self.assertRaises(ValidationError, srud.update, request=request)
+
 
 class BookingAPITestCase(APITestCase):
     """
@@ -284,11 +314,13 @@ class BookingAPITestCase(APITestCase):
         self.user = CustomUser.objects.create_user(username='user', password='test_password')
         # creating a new service to be able to do a booking
         self.service = self._create_new_service()
+        today_weekday = datetime.date.today().weekday()
+        self.time_delta = 1 if today_weekday != 5 else 2
         self.booking_attrs = {
             'user': self.user.id,
             'service': self.service.id,
             'dog_size': 'big',
-            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1), '%Y-%m-%d'),
+            'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=self.time_delta), '%Y-%m-%d'),
             'time': datetime.time.strftime(datetime.datetime.now().time(), '%H:%M:%S'),
             'comment': 'My dog is a Golden and I want it to have batched and its nails cut.',
             'cancelled': False
@@ -357,8 +389,7 @@ class BookingAPITestCase(APITestCase):
         """Tests creating a booking."""
         initial_count = Booking.objects.count()
         response = self._send_create_request()
-        if response.status_code != status.HTTP_201_CREATED:  # if we could not create the booking data
-            print(response.data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(Booking.objects.count(), initial_count + 1)
         for attr, expected_value in self.booking_attrs.items():
             self.assertEqual(response.data[attr], expected_value)
@@ -408,7 +439,7 @@ class BookingAPITestCase(APITestCase):
     def test_07_list_only_active_and_not_cancelled_bookings(self):
         """Tests listing only the active and not cancelled bookings."""
         self.booking_attrs['cancelled'] = False
-        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=1)
+        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=self.time_delta)
         self._send_create_request()
         bookings_count = Booking.objects.count()
         self.booking_attrs['cancelled'] = True
@@ -421,10 +452,26 @@ class BookingAPITestCase(APITestCase):
         self.assertEqual(response.data['count'], bookings_count)
         self.assertEqual(len(response.data['results']), bookings_count)
 
-    def test_08_cancel_booking(self):
+    def test_08_list_bookings_with_no_filters(self):
+        """Tests listing the bookings with no filters."""
+        self.booking_attrs['cancelled'] = False
+        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=self.time_delta)
+        self._send_create_request()
+        self.booking_attrs['cancelled'] = True
+        self._send_create_request()
+        self.booking_attrs['date'] = datetime.datetime.strptime('2000-01-01', '%Y-%m-%d')
+        self._send_create_request()
+        bookings_count = Booking.objects.count()
+        response = self.client.get(reverse('api_bookings'), {'active': False})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], bookings_count)
+        self.assertEqual(len(response.data['results']), bookings_count)
+
+    def test_09_cancel_booking(self):
         """Tests cancelling a booking."""
         self.booking_attrs['cancelled'] = False
-        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=1)
+        self.booking_attrs['date'] = datetime.date.today() + datetime.timedelta(days=self.time_delta)
         self._send_create_request()
         booking = Booking.objects.last()
         original_cancelled = booking.cancelled
@@ -435,11 +482,11 @@ class BookingAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertNotEquals(original_cancelled, cancelled_booking.cancelled)
 
-    def test_09_list_free_booking_slots(self):
-        """Tests listing the free booking slots for a given day."""
+    def test_10_list_available_booking_slots(self):
+        """Tests listing the available booking slots for a given day."""
         self._create_contact()
-        response = self.client.get(reverse('api_free_booking_slots'),
-                                   {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+        response = self.client.get(reverse('api_available_booking_slots'),
+                                   {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=self.time_delta),
                                                                   '%Y-%m-%d'),
                                     'service_id': self.service.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -447,20 +494,20 @@ class BookingAPITestCase(APITestCase):
         self.assertIn(['12:00', '12:00 - 13:00'], response_data.get('booking_slots'))
         self.booking_attrs['time'] = '12:00:00'
         self._send_create_request()
-        response = self.client.get(reverse('api_free_booking_slots'),
-                                   {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
+        response = self.client.get(reverse('api_available_booking_slots'),
+                                   {'day': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=self.time_delta),
                                                                   '%Y-%m-%d'),
                                     'service_id': self.service.id})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         self.assertNotIn(['12:00', '12:00 - 13:00'], response_data.get('booking_slots'))
 
-    def test_10_booking_slots_for_closed_day(self):
-        """Tests listing the free booking slots for a closed day."""
+    def test_11_booking_slots_for_closed_day(self):
+        """Tests listing the available booking slots for a closed day."""
         self._create_contact()
-        today_weekday = datetime.date.today().weekday()
-        delta_to_sunday = (6 - today_weekday) % 6
-        response = self.client.get(reverse('api_free_booking_slots'),
+        today_weekday = datetime.date.today().weekday() + 1
+        delta_to_sunday = (7 - today_weekday) % 7
+        response = self.client.get(reverse('api_available_booking_slots'),
                                    {'day': datetime.date.strftime(datetime.date.today() +
                                                                   datetime.timedelta(days=delta_to_sunday),
                                                                   '%Y-%m-%d'),
@@ -468,6 +515,55 @@ class BookingAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         response_data = response.json()
         self.assertIn(['', 'Closed'], response_data.get('booking_slots'))
+
+    def test_12_cancel_booking_with_string_booking_id(self):
+        """Tests that cancelling a booking fails with bad request when a string booking id value provided."""
+        with patch.object(CancelBooking, '__init__', return_value=None):
+            cb = CancelBooking()
+            cb.kwargs = {'booking_id': 'a'}
+            response = cb.get(request=None)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_13_cancel_booking_with_cancel_function_failing(self):
+        """Tests cancelling a booking when the cancel function fails and a response with HTTP code 500 is returned."""
+        self._send_create_request()
+        with patch.object(CancelBooking, '__init__', return_value=None):
+            with patch.object(Booking, 'cancel_booking', return_value=False):
+                booking_id = Booking.objects.last().id
+                cb = CancelBooking()
+                cb.kwargs = {'booking_id': booking_id}
+                request = Mock()
+                request.query_params = {}
+                response = cb.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('An error happened during the cancellation of the booking', response.data.get('message'))
+
+    def test_14_cancel_booking_with_booking_not_exist_failing(self):
+        """Tests cancelling a booking when the booking does not exist and a response with HTTP code 500 is returned."""
+        with patch.object(CancelBooking, '__init__', return_value=None):
+            with patch.object(Booking.objects, 'get', side_effect=Booking.DoesNotExist):
+                cb = CancelBooking()
+                cb.kwargs = {'booking_id': 1}
+                request = Mock()
+                request.query_params = {}
+                response = cb.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual('Booking with booking ID 1 does not exist', response.data.get('message'))
+
+    def test_15_list_available_time_slots_with_missing_params(self):
+        """Tests listing the available booking slots when parameters are not received and fails with a bad request."""
+        with patch.object(ListAvailableBookingSlots, '__init__', return_value=None):
+            labs = ListAvailableBookingSlots()
+        request = Mock()
+        request.query_params = {}
+        response = labs.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        request.query_params = {'day': '2023-01-01'}
+        response = labs.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        request.query_params = {'service_id': 1}
+        response = labs.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 class UserAPITestCase(APITestCase):
@@ -486,7 +582,7 @@ class UserAPITestCase(APITestCase):
         response = self.client.get(reverse('api_users'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_02_list_bookings(self):
+    def test_02_list_users(self):
         """Tests listing the users, using the API."""
         self.client.force_authenticate(user=self.admin_user)
         users_count = CustomUser.objects.count()
@@ -508,13 +604,24 @@ class UserAPITestCase(APITestCase):
         self.assertEqual(response.data['count'], users_count)
         self.assertEqual(len(response.data['results']), users_count)
 
-    def test_04_cancel_user_without_permission(self):
+    def test_04_list_only_not_active_users(self):
+        """Tests listing only the not active users."""
+        self.client.force_authenticate(user=self.admin_user)
+        inactive_user = CustomUser.objects.create_user(username='inactive_user', password='test_password',
+                                                       is_active=False)
+        response = self.client.get(reverse('api_users'), {'active': False})
+        self.assertIsNone(response.data['next'])
+        self.assertIsNone(response.data['previous'])
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_05_cancel_user_without_permission(self):
         """Tests cancelling a user without permission."""
         self.client.force_authenticate(user=self.user)
         response = self.client.get(reverse('api_cancel_user', args=(self.user.id,)), follow=True)
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_05_cancel_user(self):
+    def test_06_cancel_user(self):
         """Tests cancelling a user."""
         original_is_active = self.user.is_active
         self.client.logout()
@@ -524,19 +631,49 @@ class UserAPITestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         self.assertNotEquals(original_is_active, cancelled_user.is_active)
 
+    def test_07_cancel_user_with_string_user_id(self):
+        """Tests that cancelling a user fails with bad request when a string user id value provided."""
+        with patch.object(CancelUser, '__init__', return_value=None):
+            cu = CancelUser()
+            cu.kwargs = {'user_id': 'a'}
+            response = cu.get(request=None)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_08_cancel_user_with_cancel_function_failing(self):
+        """Tests cancelling a user when the cancel function fails and a response with HTTP code 500 is returned."""
+        with patch.object(CancelUser, '__init__', return_value=None):
+            with patch.object(CustomUser, 'cancel_user', return_value=False):
+                user_id = CustomUser.objects.last().id
+                cu = CancelUser()
+                cu.kwargs = {'user_id': user_id}
+                request = Mock()
+                request.query_params = {}
+                response = cu.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn('An error happened during the cancellation of the user', response.data.get('message'))
+
+    def test_09_cancel_user_with_user_not_exist_failing(self):
+        """Tests cancelling a user when the user does not exist and a response with HTTP code 500 is returned."""
+        with patch.object(CancelUser, '__init__', return_value=None):
+            with patch.object(CustomUser.objects, 'get', side_effect=CustomUser.DoesNotExist):
+                cu = CancelUser()
+                cu.kwargs = {'user_id': 1}
+                request = Mock()
+                request.query_params = {}
+                response = cu.get(request=request)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertEqual('User with user ID 1 does not exist', response.data.get('message'))
+
 
 class BaseViewTestCase(TestCase):
     """
     Test cases for the base view.
     """
 
-    def _login(self, admin=False):
+    def _login(self):
         """Logs in the superuser or a normal user."""
         self.client = Client()
-        if admin:
-            self.user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
-        else:
-            self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
         self.client.force_login(user=self.user)
 
     def test_01_signup_displayed_when_not_logged_in(self):
@@ -735,6 +872,12 @@ class PersonalDataTestCase(TestCase):
             response = self.client.post(reverse('personal_data'), pers_data_attr_copy)
             self.assertContains(response, '<ul class="error_list">')
 
+    def test_04_personal_data_successful_update(self):
+        """Tests a successful update of the personal data."""
+        self.client.force_login(user=self.user)
+        response = self.client.post(reverse('personal_data'), self.pers_data_attr, follow=True)
+        self.assertContains(response, '<div class="form_success_message">')
+
 
 class ContactViewTestCase(TestCase):
     """
@@ -786,6 +929,14 @@ class ContactViewTestCase(TestCase):
         pattern = r'<td>(.*)Monday:(.*)</td>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
+
+    def test_03_contact_details_none_when_no_data_in_database(self):
+        """Tests that we provide None in the context data when there is no data found in the database."""
+        with patch.object(Contact.objects, 'get', side_effect=Contact.DoesNotExist):
+            contact_page = ContactPage()
+            context = contact_page.get_context_data()
+        self.assertIn('contact_details', context.keys())
+        self.assertIsNone(context.get('contact_details'))
 
 
 class GalleryViewTestCase(TestCase):
@@ -958,7 +1109,7 @@ class AdminAPIViewTestCase(TestCase):
         self._login(admin=True)
         response = self.client.get(reverse('admin_api'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a id="free_booking_slots_button" class="a_button blue_button" >(.*)List Free Slots</a>'
+        pattern = r'<a id="available_booking_slots_button" class="a_button blue_button" >(.*)List Available Slots</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -970,6 +1121,46 @@ class AdminAPIViewTestCase(TestCase):
         pattern = r'<a id="cancel_user_button" class="a_button red_button" >(.*)Cancel User</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
+
+    def test_08_admin_image_upload_to_gallery(self):
+        """Tests uploading an image to the gallery from the Admin page."""
+        request = Mock()
+        request.method = 'POST'
+        request.POST = {'image_upload_submit': ['Upload']}
+        request.FILES = {'image_to_be_uploaded': 'image'}
+        with patch.object(GalleryManager, 'upload_image_to_gallery', return_value=True) as mock_upload_image_to_gallery:
+            with patch.object(messages, 'success') as mock_success_message:
+                response = admin_api_page(request)
+                mock_upload_image_to_gallery.assert_called_once()
+                mock_success_message.assert_called_once()
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
+
+    def test_09_admin_image_upload_to_gallery_with_no_file(self):
+        """Tests the inaction of uploading an image to the gallery when there is no image in the request."""
+        request = Mock()
+        request.method = 'POST'
+        request.POST = {'image_upload_submit': ['Upload']}
+        request.FILES = {}
+        with patch.object(GalleryManager, 'upload_image_to_gallery', return_value=True) as mock_upload_image_to_gallery:
+            with patch.object(messages, 'success') as mock_success_message:
+                with patch('dog_grooming_app.views.render') as mock_render:
+                    response = admin_api_page(request)
+                    mock_upload_image_to_gallery.assert_not_called()
+                    mock_success_message.assert_not_called()
+                    mock_render.assert_called_once()
+
+    def test_10_admin_delete_image_from_gallery(self):
+        """Tests deleting an image from the gallery from the Admin page."""
+        request = Mock()
+        request.method = 'POST'
+        request.POST = {'image_delete_submit': ['Delete'], 'image_to_be_deleted': ['image.jpg']}
+        with patch.object(GalleryManager, 'delete_image_from_gallery', return_value=None) \
+                as mock_delete_image_from_gallery:
+            with patch.object(messages, 'success') as mock_success_message:
+                response = admin_api_page(request)
+                mock_delete_image_from_gallery.assert_called_once()
+                mock_success_message.assert_called_once()
+        self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
 
 class BookingViewTestCase(TestCase):
@@ -1102,8 +1293,8 @@ class UserBookingsViewTestCase(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = CustomUser.objects.create_user(username='user', password='test_password')
         self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
         self._create_contact()
         self.service = self._create_new_service()
         self.booking = self._create_booking()
@@ -1211,7 +1402,7 @@ class UserBookingsViewTestCase(TestCase):
         self.assertIsNotNone(match)
 
     def test_05_booking_box_disappears_after_cancel(self):
-        """Tests that the booking box is displayed indeed in the User Bookings view."""
+        """Tests that the booking box disappears indeed after cancelling in the User Bookings view."""
         self._login()
         response = self.client.get(reverse('user_bookings'))
         self.assertContains(response, '<div class="user_booking_box">')
@@ -1456,3 +1647,185 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
+
+
+class ModelsTestCase(TestCase):
+    """
+    Test cases for models.
+    """
+
+    def test_01_customuser_cancel_fails_with_save(self):
+        """Tests that we return False when the user cancellation fails during the save method."""
+        with patch.object(CustomUser, '__init__', return_value=None):
+            with patch.object(CustomUser, 'save', side_effect=Error):
+                cu = CustomUser()
+                return_value = cu.cancel_user()
+        self.assertFalse(return_value)
+
+    def test_02_booking_cancel_fails_with_save(self):
+        """Tests that we return False when the booking cancellation fails during the save method."""
+        with patch.object(Booking, '__init__', return_value=None):
+            with patch.object(Booking, 'save', side_effect=Error):
+                booking = Booking()
+                return_value = booking.cancel_booking()
+        self.assertFalse(return_value)
+
+    def test_03_service_with_no_photo_during_save(self):
+        """Tests that if there is no photo provided during a service update, we keep the existing one."""
+        with patch.object(Service, '__init__', return_value=None):
+            with patch.object(Service, 'clean', return_value=None):
+                mock_service = Mock()
+                mock_service.photo = Mock()
+                mock_service.photo.name = 'photo'
+                with patch.object(Service.objects, 'get', return_value=mock_service):
+                    service = Service()
+                    service.id = 1
+                    service.photo = Mock()
+                    service.photo.name = None
+                    with patch.object(models.Model, 'save', return_value=None):
+                        service.save()
+                    Service.objects.get.assert_called_once()
+        self.assertEqual(service.photo.name, mock_service.photo.name)
+
+    def test_04_service_validate_price_not_integer(self):
+        """Tests that a ValidationError is thrown is the price is not a positive integer. Default price is required."""
+        with patch.object(Service, '__init__', return_value=None):
+            service = Service()
+        self.assertRaises(django_ValidationError, service._validate_price, field_name='price_big', value=-1)
+        self.assertRaises(django_ValidationError, service._validate_price, field_name='price_big', value=0)
+        self.assertRaises(django_ValidationError, service._validate_price, field_name='price_small', value='a')
+        self.assertRaises(django_ValidationError, service._validate_price, field_name='price_default', value='a')
+        self.assertRaises(django_ValidationError, service._validate_price, field_name='price_default', value='')
+        self.assertRaises(django_ValidationError, service._validate_price, field_name='price_default', value=None)
+
+
+class BookingManagerTestCase(TestCase):
+    """
+    Test cases for the Booking Manager.
+    """
+
+    def test_01_no_available_booking_slots(self):
+        """Tests the return value when there are no available booking slots."""
+        contact_mock = Mock()
+        contact_mock.get_opening_hour_for_day = Mock(return_value=datetime.time(8, 0))
+        contact_mock.get_closing_hour_for_day = Mock(return_value=datetime.time(9, 0))
+        service_mock = Mock()
+        service_mock.get_duration_of_service = Mock(return_value=(datetime.timedelta(minutes=120),
+                                                                  datetime.timedelta(minutes=135)))
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            with patch.object(Service.objects, 'get', return_value=service_mock):
+                available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('', 'No available slots')])
+
+    def test_02_no_booking_slots_because_of_closed(self):
+        """Tests the return value when there are no available booking slots because the salon is closed."""
+        contact_mock = Mock()
+        contact_mock.get_opening_hour_for_day = Mock(return_value=None)
+        contact_mock.get_closing_hour_for_day = Mock(return_value=datetime.time(9, 0))
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('', 'Closed')])
+
+        contact_mock.get_opening_hour_for_day = Mock(return_value=datetime.time(8, 0))
+        contact_mock.get_closing_hour_for_day = Mock(return_value=None)
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('', 'Closed')])
+
+        contact_mock.get_opening_hour_for_day = Mock(return_value=None)
+        contact_mock.get_closing_hour_for_day = Mock(return_value=None)
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('', 'Closed')])
+
+    def test_03_available_booking_slots_with_no_other_booking(self):
+        """Tests the return value when there are no other bookings for the same day."""
+        contact_mock = Mock()
+        contact_mock.get_opening_hour_for_day = Mock(return_value=datetime.time(8, 0))
+        contact_mock.get_closing_hour_for_day = Mock(return_value=datetime.time(9, 0))
+        service_mock = Mock()
+        service_mock.get_duration_of_service = Mock(return_value=(datetime.timedelta(minutes=15),
+                                                                  datetime.timedelta(minutes=30)))
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            with patch.object(Service.objects, 'get', return_value=service_mock):
+                available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('08:00', '08:00 - 08:15'),
+                                               ('08:15', '08:15 - 08:30'),
+                                               ('08:30', '08:30 - 08:45'),
+                                               ('08:45', '08:45 - 09:00')])
+
+    def test_04_available_booking_slots_with_other_booking(self):
+        """Tests the return value when there are other bookings for the same day."""
+        contact_mock = Mock()
+        contact_mock.get_opening_hour_for_day = Mock(return_value=datetime.time(8, 0))
+        contact_mock.get_closing_hour_for_day = Mock(return_value=datetime.time(9, 0))
+        service_mock = Mock()
+        service_mock.get_duration_of_service = Mock(return_value=(datetime.timedelta(minutes=15),
+                                                                  datetime.timedelta(minutes=30)))
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            with patch.object(Service.objects, 'get', return_value=service_mock):
+                with patch.object(BookingManager, 'get_booked_time_slots', return_value=[(datetime.time(8, 15),
+                                                                                          datetime.time(8, 45))]):
+                    available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('08:45', '08:45 - 09:00')])
+
+    def test_05_available_booking_slots_with_other_booking(self):
+        """Tests the return value when there are other bookings for the same day."""
+        contact_mock = Mock()
+        contact_mock.get_opening_hour_for_day = Mock(return_value=datetime.time(8, 0))
+        contact_mock.get_closing_hour_for_day = Mock(return_value=datetime.time(10, 0))
+        service_mock = Mock()
+        service_mock.get_duration_of_service = Mock(return_value=(datetime.timedelta(minutes=15),
+                                                                  datetime.timedelta(minutes=30)))
+        with patch.object(Contact.objects, 'get', return_value=contact_mock):
+            with patch.object(Service.objects, 'get', return_value=service_mock):
+                with patch.object(BookingManager, 'get_booked_time_slots', return_value=[(datetime.time(8, 45),
+                                                                                          datetime.time(9, 15))]):
+                    available_slots = BookingManager.get_available_booking_slots('2023-12-12', 1)
+        self.assertListEqual(available_slots, [('08:00', '08:00 - 08:15'),
+                                               ('08:15', '08:15 - 08:30'),
+                                               ('09:15', '09:15 - 09:30'),
+                                               ('09:30', '09:30 - 09:45'),
+                                               ('09:45', '09:45 - 10:00')])
+
+
+class GalleryManagerTestCase(TestCase):
+    """
+    Test cases for the Gallery Manager.
+    """
+
+    @patch('builtins.open', mock_open())
+    def test_01_upload_image_to_gallery(self):
+        """Tests uploading the photo into the gallery."""
+        image = Mock()
+        image.name = 'image.jpg'
+        image.chunks = lambda: [list() for _ in range(3)]
+        return_value = GalleryManager.upload_image_to_gallery(image)
+        self.assertTrue(return_value)
+
+    def test_02_upload_image_to_gallery_fails(self):
+        """Tests when uploading a photo to the gallery fails."""
+        mo = mock_open()
+        with patch('builtins.open', mo) as mocked_open:
+            mocked_open.side_effect = FileNotFoundError
+            image = Mock()
+            image.name = 'image'
+            return_value = GalleryManager.upload_image_to_gallery(image)
+        self.assertFalse(return_value)
+
+    def test_03_get_gallery_images(self):
+        """Tests getting the image list from the gallery."""
+        images = GalleryManager.get_gallery_image_list()
+        self.assertNotIn('.gitkeep', images)
+        self.assertIsInstance(images, list)
+
+    def test_04_delete_image_from_gallery(self):
+        """Tests deleting an image from the gallery."""
+        image = 'image.jpg'
+        with patch.object(os, 'listdir', return_value=[image]):
+            with patch.object(os.path, 'isfile', return_value=True):
+                with patch.object(os, 'remove', return_value=None):
+                    GalleryManager.delete_image_from_gallery(image)
+                    os.listdir.assert_called_once()
+                    os.path.isfile.assert_called_once()
+                    os.remove.assert_called_once()

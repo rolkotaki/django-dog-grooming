@@ -12,7 +12,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
-from .utils import get_available_booking_slots, upload_image_to_gallery, get_gallery_image_list, delete_image_from_gallery
+from .utils import GalleryManager, BookingManager
 
 
 class HomePage(TemplateView):
@@ -59,7 +59,7 @@ def login_user(request):
                 if user.is_active:
                     login(request, user)
                     return redirect('home')
-                else:
+                else:  # it seems that the authenticate() returns None if the user is not active anyway
                     messages.error(request, _("The user is not active!"))
             else:
                 messages.error(request, _("Invalid username or password!"))
@@ -125,7 +125,7 @@ class GalleryPage(TemplateView):
         Overriding the get_context_data method to add the image list from the gallery folder.
         """
         context = super().get_context_data(**kwargs)
-        context["images"] = get_gallery_image_list()
+        context["images"] = GalleryManager.get_gallery_image_list()
         return context
 
 
@@ -176,7 +176,7 @@ def admin_api_page(request):
     services = Service.objects.order_by('id')
     active_services = Service.objects.filter(active=True).order_by('id')
     users = CustomUser.objects.filter(is_active=True).order_by('id')
-    gallery_images = get_gallery_image_list()
+    gallery_images = GalleryManager.get_gallery_image_list()
     if request.method == 'GET':
         return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
                                                   'users': users, 'gallery_images': gallery_images})
@@ -185,13 +185,13 @@ def admin_api_page(request):
         if 'image_upload_submit' in request.POST:
             image = request.FILES.get('image_to_be_uploaded')
             if image:
-                upload_image_to_gallery(image)
+                GalleryManager.upload_image_to_gallery(image)
                 messages.success(request, _("The image has been uploaded successfully."))
                 return redirect('admin_api')
         # deleting an image from the gallery
         if 'image_delete_submit' in request.POST:
             image = request.POST.get('image_to_be_deleted')
-            delete_image_from_gallery(image)
+            GalleryManager.delete_image_from_gallery(image)
             messages.success(request, _("The image has been deleted successfully."))
             return redirect('admin_api')
         return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
@@ -204,7 +204,8 @@ def booking(request, service_id):
     View method for the booking.
     """
     service = Service.objects.get(id=service_id)
-    available_booking_slots = get_available_booking_slots(datetime.date.today() + datetime.timedelta(days=1), service.id)
+    available_booking_slots = BookingManager.get_available_booking_slots(datetime.date.today() + datetime.timedelta(days=1),
+                                                                         service.id)
     if request.method == 'GET':
         form = BookingForm(available_booking_slots=available_booking_slots)
         return render(request, "booking.html", {'form': form, 'service': service})

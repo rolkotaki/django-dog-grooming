@@ -36,8 +36,8 @@
             <a class="a_button green_button" href="{% url 'api_booking_create' %}">{% trans 'Create' %}</a>
             <a class="a_button blue_button" href="{% url 'api_bookings' %}">{% trans 'View' %}</a>
             <br><br>
-            <a id="free_booking_slots_button" class="a_button blue_button" >
-                {% trans 'List Free Slots' %}</a>
+            <a id="available_booking_slots_button" class="a_button blue_button" >
+                {% trans 'List Available Slots' %}</a>
             <input type="date" class="date_input" id="date" name="date" onchange="setAvailableBookingSlotsAPIUrlOnAdminPage()"/>
             <select id="service_list" onchange="setAvailableBookingSlotsAPIUrlOnAdminPage()" class="select_input admin_service_list">
                 <option value="none" >{% trans 'Choose a service!' %}</option>

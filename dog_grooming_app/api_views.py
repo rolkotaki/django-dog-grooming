@@ -20,7 +20,7 @@ from rest_framework import status
 from .serializers import ContactSerializer, ServiceSerializer, ServiceUpdateDeleteSerializer, BookingCreateSerializer, \
     BookingSerializer, CustomUserSerializer
 from .models import Contact, Service, Booking, CustomUser
-from .utils import get_available_booking_slots, cancel_booking, cancel_user
+from .utils import BookingManager
 
 
 class ContactCreate(CreateAPIView):
@@ -168,16 +168,18 @@ class CancelBooking(APIView):
         except ValueError:
             return Response({'message': _('Incorrect booking id')}, status=status.HTTP_400_BAD_REQUEST)
         by_user = True if request.query_params.get('by_user', 'true').lower() == 'true' else False
-        if cancel_booking(booking_id, by_user=by_user):
-            return redirect(reverse('user_bookings' if by_user else 'admin_bookings'))
-        return Response({'message': _('An error happened during the cancellation of the booking %(booking_id)')
-                                    % {'booking_id': booking_id}},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            if Booking.objects.get(id=booking_id).cancel_booking(by_user):
+                return redirect(reverse('user_bookings' if by_user else 'admin_bookings'))
+            message = _('An error happened during the cancellation of the booking %(booking_id)d') % {'booking_id': booking_id}
+        except Booking.DoesNotExist:
+            message = _('Booking with booking ID %(booking_id)d does not exist') % {'booking_id': booking_id}
+        return Response({'message': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ListFreeTimeSlots(APIView):
+class ListAvailableBookingSlots(APIView):
     """
-    API view class to get the free time slots for booking.
+    API view class to get the available time slots for booking.
     """
     authentication_classes = [SessionAuthentication, BasicAuthentication]
 
@@ -186,9 +188,9 @@ class ListFreeTimeSlots(APIView):
         service_id = request.query_params.get('service_id', None)
         if not day or not service_id:
             return Response({'message': _('Incorrect day or service_id')}, status=status.HTTP_400_BAD_REQUEST)
-        booking_slots = get_available_booking_slots(day=day, service_id=service_id)
+        booking_slots = BookingManager.get_available_booking_slots(day=day, service_id=service_id)
         response_data = {
-            'message': _('These are the free booking slots'),
+            'message': _('These are the available booking slots'),
             'booking_slots': booking_slots
         }
         return Response(response_data, status=status.HTTP_200_OK)  # content_type='application/json'
@@ -257,11 +259,9 @@ class UserList(ListAPIView):
         if active is None:
             return super().get_queryset()
         queryset = CustomUser.objects.all()
-        if active.lower() == 'true':
-            return queryset.filter(Q(is_active=True))
-        elif active.lower() == 'false':
+        if active.lower() == 'false':
             return queryset.filter(Q(is_active=False))
-        return queryset
+        return queryset.filter(Q(is_active=True))
 
 
 class CancelUser(APIView):
@@ -276,9 +276,11 @@ class CancelUser(APIView):
             user_id = int(self.kwargs.get('user_id'))
         except ValueError:
             return Response({'message': _('Incorrect user id')}, status=status.HTTP_400_BAD_REQUEST)
-        if cancel_user(user_id):
-            messages.success(request, _("The user has been cancelled successfully."))
-            return redirect(reverse('admin_api'))
-        return Response({'message': _('An error happened during the cancellation of the user %(user_id)')
-                                    % {'user_id': user_id}},
-                        status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        try:
+            if CustomUser.objects.get(id=user_id).cancel_user():
+                messages.success(request, _("The user has been cancelled successfully."))
+                return redirect(reverse('admin_api'))
+            message = _('An error happened during the cancellation of the user %(user_id)d') % {'user_id': user_id}
+        except CustomUser.DoesNotExist:
+            message = _('User with user ID %(user_id)d does not exist') % {'user_id': user_id}
+        return Response({'message': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
