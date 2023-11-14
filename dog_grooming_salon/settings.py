@@ -81,7 +81,7 @@ WSGI_APPLICATION = 'dog_grooming_salon.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-db_config = load_config().get('postgresql_dog_grooming')
+db_config = load_config().get('postgresql_dog_grooming', {})
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
