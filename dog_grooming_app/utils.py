@@ -34,7 +34,7 @@ class BookingManager:
         :param service_id: The ID of the service that is being booked.
         :return: List of tuples with the value and the text of the option HTML tag in the dropdown list.
         """
-        inital_times = list()
+        available_booking_slots = list()
         booking_day = datetime.datetime.strptime(day, '%Y-%m-%d').date() if isinstance(day, str) else day
         # retrieving the opening and closing hours
         contact_details = Contact.objects.get(id='x')
@@ -64,7 +64,7 @@ class BookingManager:
                     break
             # if the timeslot is available, we append it to the list to be returned
             if timeslot_available:
-                inital_times.append((datetime.time.strftime(cur_time, '%H:%M'),
+                available_booking_slots.append((datetime.time.strftime(cur_time, '%H:%M'),
                                      "{} - {}".format(datetime.time.strftime(cur_time, '%H:%M'),
                                                       datetime.time.strftime(
                                                           (datetime.datetime.combine(booking_day, cur_time) +
@@ -73,12 +73,9 @@ class BookingManager:
             # we increase the current time by the booking slot search time interval
             cur_time = (datetime.datetime.combine(booking_day, cur_time) +
                         datetime.timedelta(minutes=BOOKING_SLOT_SEARCH_TIME_INTERVAL)).time()
-            # cur_time = (datetime.datetime.combine(booking_day, cur_time) + duration_without_break).time()
-            # TODO: to check with the owner if for example a one hour booking can start at any minute of an hour
-            #  or only in certain times, like every half hour
-        if len(inital_times) == 0:
+        if len(available_booking_slots) == 0:
             return [('', _('No available slots'))]
-        return inital_times
+        return available_booking_slots
 
 
 class GalleryManager:
