@@ -1,0 +1,13 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktranslate with username=username day=day time=time %}
+Hi {{ username }},
+<br><br>
+We are sorry to inform you that your booking on {{ day }} at {{ time }} has been cancelled. We will get in touch with you for a new appointment.
+<br><br>
+We are sorry for the inconvenience.
+<br><br>
+Kind regards,<br>
+Emma's Dog Grooming Salon
+{% endblocktranslate %}
+{% endautoescape %}

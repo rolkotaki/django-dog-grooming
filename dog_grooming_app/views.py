@@ -8,11 +8,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
+from django.contrib.sites.shortcuts import get_current_site
+from django.utils.http import urlsafe_base64_decode
+from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
 from .utils import GalleryManager, BookingManager
+from .tokens import account_activation_token
 
 
 class HomePage(TemplateView):
@@ -34,11 +38,35 @@ def sign_up(request):
         form = SignUpForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            # TODO set active=False until user confirms email account
+            user.is_active = False
             user.save()
-            login(request, user)
-            return redirect('home')
+            # sending the email to confirm the registration
+            user.send_activation_link(get_current_site(request).domain,
+                                      'https' if request.is_secure() else 'http')
+
+            messages.success(request, _('Your account has been created successfully, please check your emails '
+                                        'for the activation link to complete your registration.'))
+            return render(request, "signup.html", {'form': form})
         return render(request, "signup.html", {'form': form})
+
+
+def activate_account(request, uidb64, token):
+    """
+    View method to activate a user account.
+    """
+    try:
+        uid = force_str(urlsafe_base64_decode(uidb64))
+        user = CustomUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+        user = None
+
+    if user and account_activation_token.check_token(user, token):
+        user.is_active = True
+        user.save()
+        messages.success(request, _('Your account has been activated successfully, you can log in now.'))
+    else:
+        messages.error(request, _('Activation link is invalid or there was a problem activating your account.'))
+    return redirect('login')
 
 
 def login_user(request):
@@ -87,11 +115,20 @@ def personal_data(request):
             user = CustomUser.objects.get(id=request.user.id)
             user.first_name = form.cleaned_data['first_name']
             user.last_name = form.cleaned_data['last_name']
-            user.email = form.cleaned_data['email']
             user.phone_number = form.cleaned_data['phone_number']
-            # TODO set active=False until user confirms email account
-            user.save()
-            messages.success(request, _("Your data has been updated successfully."))
+            if user.email != form.cleaned_data['email']:
+                # if the email has changed, we send an activation mail to the user to confirm their new email address
+                user.email = form.cleaned_data['email']
+                user.is_active = False
+                user.save()
+                user.send_activation_link(get_current_site(request).domain,
+                                          'https' if request.is_secure() else 'http')
+                redirect('logout')
+                messages.success(request, _("Your data has been updated successfully and a confirmation email has been "
+                                            "sent to confirm your new email address."))
+            else:
+                user.save()
+                messages.success(request, _("Your data has been updated successfully."))
             return redirect('personal_data')
         return render(request, "personal_data.html", {'form': form})
 
@@ -112,6 +149,16 @@ class ContactPage(TemplateView):
         except Contact.DoesNotExist:
             context["contact_details"] = None
         return context
+
+    def post(self, request, *args, **kwargs):
+        """
+        Post method to send the callback request email to the owner.
+        """
+        if request.POST.get('call_me', None):
+            Contact.send_callback_request(request.user)
+            messages.success(request, _('The callback request has been sent to the owner.'))
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
 
 
 class GalleryPage(TemplateView):

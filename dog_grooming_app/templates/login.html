@@ -33,7 +33,18 @@
         <div class="login_signup_errors">
             {% if messages %}
                 {% for message in messages %}
+                {% if message.tags == 'error' %}
                     {{ message }}
+                {% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="form_success_message">
+            {% if messages %}
+                {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    {{ message }}
+                {% endif %}
                 {% endfor %}
             {% endif %}
         </div>

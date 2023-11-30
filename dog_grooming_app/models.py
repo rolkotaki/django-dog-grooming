@@ -5,9 +5,17 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 from django.db.utils import Error
+from django.template.loader import render_to_string
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from typing import Tuple
+import threading
 
-from .constants import PHONE_NUMBER_VALIDATOR, BREAK
+from .constants import PHONE_NUMBER_VALIDATOR, BREAK, BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_ADMIN, \
+    BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_USER, USER_CANCELLATION_EMAIL_SUBJECT, USER_REGISTRATION_EMAIL_SUBJECT, \
+    CALLBACK_EMAIL_SUBJECT
+from dog_grooming_salon.utils import DogGroomingEmail
+from .tokens import account_activation_token
 
 
 class CustomUser(AbstractUser):
@@ -20,15 +28,32 @@ class CustomUser(AbstractUser):
 
     def cancel_user(self) -> bool:
         """
-        Cancels the user by putting the is_active flag to False.
+        Cancels the user by putting the is_active flag to False. The user is notified via email.
         """
         try:
             self.is_active = False
             self.save()
-            # TODO: send an email to the user
+            html_message = render_to_string('emails/user_cancellation.html', {'username': self.username})
+            dg_email = DogGroomingEmail(to=self.email, subject=USER_CANCELLATION_EMAIL_SUBJECT,
+                                        message=html_message)
+            threading.Thread(target=dg_email.send).start()
             return True
         except Error:
             return False
+
+    def send_activation_link(self, domain: str, protocol: str):
+        """
+        Sends the activation link to the user's email.
+        """
+        email_context = {'username': self.username,
+                         'domain': domain,
+                         'uid': urlsafe_base64_encode(force_bytes(self.pk)),
+                         'token': account_activation_token.make_token(self),
+                         'protocol': protocol}
+        html_message = render_to_string('emails/user_registration.html', email_context)
+        dg_email = DogGroomingEmail(to=[self.email], subject=USER_REGISTRATION_EMAIL_SUBJECT,
+                                    message=html_message)
+        threading.Thread(target=dg_email.send).start()
 
 
 class Contact(models.Model):
@@ -91,6 +116,14 @@ class Contact(models.Model):
         """
         self.id = 'x'
         super().save(*args, **kwargs)
+
+    @staticmethod
+    def send_callback_request(user: CustomUser):
+        superusers_emails = CustomUser.objects.filter(is_superuser=True).values_list('email', flat=True)
+        html_message = render_to_string('emails/callback_request.html', {'user': user})
+        dg_email = DogGroomingEmail(to=superusers_emails, subject=CALLBACK_EMAIL_SUBJECT,
+                                    message=html_message)
+        threading.Thread(target=dg_email.send).start()
 
 
 class Service(models.Model):
@@ -169,18 +202,27 @@ class Booking(models.Model):
         """
         Cancels the booking by putting the cancelled flag to True.
         The by_user param indicates whether it is cancelled by the user themselves or by the admin.
+        The user or the admin is notified via email.
         """
         try:
             self.cancelled = True
             self.save()
+            email_context = {'username': self.user.username,
+                             'day': self.date,
+                             'time': self.time}
             # if it is cancelled by the admin, we send a mail to the user
             if not by_user:
-                # TODO: send an email to the user
-                pass
+                html_message = render_to_string('emails/booking_cancellation_to_user.html', email_context)
+                dg_email = DogGroomingEmail(to=[self.user.email], subject=BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_USER,
+                                            message=html_message)
+                threading.Thread(target=dg_email.send).start()
             # if it is cancelled by the user, we send a mail to the admin
             if by_user:
-                # TODO: send an email to the admin
-                pass
+                superusers_emails = CustomUser.objects.filter(is_superuser=True).values_list('email', flat=True)
+                html_message = render_to_string('emails/booking_cancellation_to_admin.html', email_context)
+                dg_email = DogGroomingEmail(to=superusers_emails, subject=BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_ADMIN,
+                                            message=html_message)
+                threading.Thread(target=dg_email.send).start()
             return True
         except Error:
             return False

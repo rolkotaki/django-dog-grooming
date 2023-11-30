@@ -1,0 +1,10 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktranslate with username=username day=day time=time %}
+Hi,
+<br><br>
+{{ username }} has cancelled their booking on {{ day }} at {{ time }}.
+<br><br>
+Regards.
+{% endblocktranslate %}
+{% endautoescape %}

@@ -100,9 +100,21 @@
             </tr>
         </table>
         <div class="contact_button">
-            <input class="a_button green_button {% if not user.is_authenticated %}disabled_button{% endif %}" type="submit" value="{% trans 'Call Me' %}" />
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                <input name="call_me" class="a_button green_button {% if not user.is_authenticated %}disabled_button{% endif %}" type="submit" value="{% trans 'Call Me' %}" />
+            </form>
             {% if not user.is_authenticated %}
             <p class="italic">{% trans 'Log in to request callback!' %}</p>
+            {% endif %}
+        </div>
+        <div class="form_success_message" style="margin-top: -15px; margin-bottom: 20px;">
+            {% if messages %}
+                {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    {{ message }}
+                {% endif %}
+                {% endfor %}
             {% endif %}
         </div>
         <iframe width="400" height="240" src="{{ contact_details.google_maps_url }}" class="contact_map" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>

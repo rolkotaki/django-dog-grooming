@@ -1,0 +1,11 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktranslate with username=user.username last_name=user.last_name first_name=user.first_name phone_number=user.phone_number %}
+Hi,
+<br><br>
+{{ username }} ({{ last_name }}, {{ first_name }}) has requested a callback.<br>
+Phone number: {{ phone_number }}
+<br><br>
+Regards.
+{% endblocktranslate %}
+{% endautoescape %}

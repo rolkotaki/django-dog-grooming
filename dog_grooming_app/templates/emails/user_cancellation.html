@@ -1,0 +1,12 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktranslate with username=username %}
+Hi {{ username }},
+<br><br>
+We inform you that your account has been deactivated.
+It may be due to not showing up for several bookings.
+<br><br>
+Kind regards,<br>
+Emma's Dog Grooming Salon
+{% endblocktranslate %}
+{% endautoescape %}

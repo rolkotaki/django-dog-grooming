@@ -15,13 +15,15 @@ from django.utils.translation import gettext as _
 from django.db.utils import Error
 from django.db import models
 from django.contrib import messages
-import django.shortcuts
 from unittest.mock import Mock, patch, mock_open
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
 
 from .models import CustomUser, Contact, Service, Booking
 from .api_views import CancelUser, CancelBooking, ListAvailableBookingSlots, ServiceRetrieveUpdateDestroy
 from .views import ContactPage, admin_api_page
 from .utils import GalleryManager, BookingManager
+from .tokens import account_activation_token
 
 
 class ContactAPITestCase(APITestCase):
@@ -825,7 +827,10 @@ class SignUpTestCase(TestCase):
     def test_02_successful_signup(self):
         """Tests a successful signup."""
         response = self.client.post(reverse('signup'), self.signup_attr)
-        self.assertRedirects(response, reverse('home'))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertContains(response, '<div class="form_success_message">')
+        self.assertContains(response, 'Your account has been created successfully, please check your emails '
+                                      'for the activation link to complete your registration.')
 
     def test_03_empty_signup_fields(self):
         """Tests for each field when it is empty when trying to sign up."""
@@ -836,6 +841,49 @@ class SignUpTestCase(TestCase):
             self.assertContains(response, '<ul class="error_list">')
 
 
+class ActivateAccountTestCase(TestCase):
+    """
+    Test cases for the user account activation.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+
+    def test_01_activate_user_account_successful(self):
+        """Tests the successful activation of a user account."""
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = account_activation_token.make_token(self.user)
+        response = self.client.post(reverse('activate_account', args=(uid, token)), follow=True)
+        self.assertContains(response, '<div class="form_success_message">')
+        self.assertContains(response, 'Your account has been activated successfully, you can log in now.')
+
+    def test_02_activate_user_account_not_successful(self):
+        """Tests when activating the user account fails because of an invalid uid."""
+        uid = 'aaa'
+        token = account_activation_token.make_token(self.user)
+        response = self.client.post(reverse('activate_account', args=(uid, token)), follow=True)
+        self.assertContains(response, '<div class="login_signup_errors">')
+        self.assertContains(response, 'Activation link is invalid or there was a problem activating your account.')
+
+    def test_03_activate_user_account_not_successful(self):
+        """Tests when activating the user account fails because of an invalid token."""
+        uid = urlsafe_base64_encode(force_bytes(self.user.pk))
+        token = 'aaa'
+        response = self.client.post(reverse('activate_account', args=(uid, token)), follow=True)
+        self.assertContains(response, '<div class="login_signup_errors">')
+        self.assertContains(response, 'Activation link is invalid or there was a problem activating your account.')
+
+    def test_04_activate_user_account_not_successful(self):
+        """Tests when activating the user account fails because a different user's pk was used in the decoding."""
+        uid = urlsafe_base64_encode(force_bytes(CustomUser.objects.create_user(username='another_user',
+                                                                               password='test_password').pk))
+        token = account_activation_token.make_token(self.user)
+        response = self.client.post(reverse('activate_account', args=(uid, token)), follow=True)
+        self.assertContains(response, '<div class="login_signup_errors">')
+        self.assertContains(response, 'Activation link is invalid or there was a problem activating your account.')
+
+
 class PersonalDataTestCase(TestCase):
     """
     Test cases for the Personal Data view.
@@ -843,7 +891,7 @@ class PersonalDataTestCase(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        self.user = CustomUser.objects.create_user(username='user', password='test_password', email='somebody@mail.com')
         self.pers_data_attr = {
             'first_name': 'Firstname',
             'last_name': 'Lastname',
@@ -872,11 +920,21 @@ class PersonalDataTestCase(TestCase):
             response = self.client.post(reverse('personal_data'), pers_data_attr_copy)
             self.assertContains(response, '<ul class="error_list">')
 
-    def test_04_personal_data_successful_update(self):
-        """Tests a successful update of the personal data."""
+    def test_04_personal_data_successful_update_without_email(self):
+        """Tests a successful update of the personal data without email change."""
         self.client.force_login(user=self.user)
         response = self.client.post(reverse('personal_data'), self.pers_data_attr, follow=True)
         self.assertContains(response, '<div class="form_success_message">')
+        self.assertContains(response, 'Your data has been updated successfully')
+
+    def test_05_personal_data_successful_update_with_email(self):
+        """Tests a successful update of the personal data with email change included."""
+        self.pers_data_attr['email'] = 'new@mail.com'
+        self.client.force_login(user=self.user)
+        response = self.client.post(reverse('personal_data'), self.pers_data_attr, follow=True)
+        self.assertContains(response, '<div class="form_success_message">')
+        self.assertContains(response, "Your data has been updated successfully and a confirmation email has been "
+                                      "sent to confirm your new email address.")
 
 
 class ContactViewTestCase(TestCase):
@@ -937,6 +995,15 @@ class ContactViewTestCase(TestCase):
             context = contact_page.get_context_data()
         self.assertIn('contact_details', context.keys())
         self.assertIsNone(context.get('contact_details'))
+
+    def test_04_send_callback_request(self):
+        """Tests sending a callback request from the Contact view."""
+        response = self.client.post(reverse('contact'), {'call_me': 'call_me'}, follow=True)
+        self.assertContains(response, '<div class="form_success_message"')
+        self.assertContains(response, 'The callback request has been sent to the owner.')
+        # to test that the message is only displayed when required
+        response = self.client.post(reverse('contact'), {'dont_call_me': 'dont_call_me'}, follow=True)
+        self.assertNotContains(response, 'The callback request has been sent to the owner.')
 
 
 class GalleryViewTestCase(TestCase):
@@ -1416,6 +1483,13 @@ class UserBookingsViewTestCase(TestCase):
         self.assertNotContains(response, '<div class="user_booking_box">')
         self.assertIsNone(match)
 
+    def test_06_when_there_are_no_bookings(self):
+        """Tests the User Bookings view when there are no bookings."""
+        self._login()
+        Booking.objects.all().delete()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertContains(response, 'You have no bookings.')
+
 
 class AdminBookingsViewTestCase(TestCase):
     """
@@ -1557,7 +1631,8 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<p class="service_box_name">(.*)Service name EN(.*)</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
-        response = self.client.get(reverse('api_cancel_booking', args=(self.booking.id,)), follow=True)
+        response = self.client.get(reverse('api_cancel_booking', args=(self.booking.id,)) + '?by_user=false',
+                                   follow=True)
         html_content = response.content.decode('utf-8')
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertNotContains(response, '<div class="admin_booking_box">')

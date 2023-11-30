@@ -35,6 +35,10 @@
         <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}">{% trans 'Cancel' %}</a>
     </div>
 
+    {% empty %}
+
+    <p style="margin-left: 20px; text-align: center;">You have no bookings.</p>
+
     {% endfor %}
 
 </div>

@@ -1,0 +1,16 @@
+{% load i18n %}
+{% autoescape off %}
+{% blocktranslate with username=username %}
+Hi {{ username }},
+<br><br>
+Welcome to Emma's Dog Grooming Salon.<br>
+To confirm your registration and activate your account please click on the following link:<br>
+{% endblocktranslate %}
+<a href="{{ protocol }}://{{ domain }}{% url 'activate_account' uidb64=uid token=token %}">
+    {{ protocol }}://{{ domain }}{% url 'activate_account' uidb64=uid token=token %}</a>
+<br><br>
+{% blocktranslate %}
+Kind regards,<br>
+Emma's Dog Grooming Salon
+{% endblocktranslate %}
+{% endautoescape %}
