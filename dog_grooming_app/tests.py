@@ -224,8 +224,11 @@ class ServiceAPITestCase(APITestCase):
         response = self.client.get(reverse('api_services'))
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
-    def test_08_list_services(self):
-        """Tests listing the services, using the API."""
+    def test_08_list_all_services(self):
+        """Tests listing all the services, using the API."""
+        self.service_attrs['active'] = True
+        self._send_create_request()
+        self.service_attrs['active'] = False
         self._send_create_request()
         services_count = Service.objects.count()
         response = self.client.get(reverse('api_services'))
@@ -236,27 +239,29 @@ class ServiceAPITestCase(APITestCase):
 
     def test_09_list_only_active_services(self):
         """Tests listing only the active services."""
+        self.service_attrs['active'] = True
         self._send_create_request()
-        services_count = Service.objects.count()
         self.service_attrs['active'] = False
+        self._send_create_request()
         self._send_create_request()
         response = self.client.get(reverse('api_services'), {'active': True})
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
-        self.assertEqual(response.data['count'], services_count)
-        self.assertEqual(len(response.data['results']), services_count)
+        self.assertEqual(response.data['count'], 1)
+        self.assertEqual(len(response.data['results']), 1)
 
-    def test_10_list_all_services(self):
-        """Tests listing all the services, including the not active ones."""
+    def test_10_list_only_inactive_services(self):
+        """Tests listing only the inactive services."""
+        self.service_attrs['active'] = True
         self._send_create_request()
         self.service_attrs['active'] = False
         self._send_create_request()
-        services_count = Service.objects.count()
+        self._send_create_request()
         response = self.client.get(reverse('api_services'), {'active': False})
         self.assertIsNone(response.data['next'])
         self.assertIsNone(response.data['previous'])
-        self.assertEqual(response.data['count'], services_count)
-        self.assertEqual(len(response.data['results']), services_count)
+        self.assertEqual(response.data['count'], 2)
+        self.assertEqual(len(response.data['results']), 2)
 
     def test_11_create_price_only_positive_integer(self):
         """Tests that only positive integer prices can be created."""

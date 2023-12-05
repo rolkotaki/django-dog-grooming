@@ -32,7 +32,7 @@ function setInitialDateForAvailableBookingSlotsOnAdminPage() {
  * Sets the href value of the link button to update or delete a specific service, on the Admin page.
  */
 function setServiceUpdateDeleteAPIUrlOnAdminPage(element) {
-    var serviceUpdateDeleteButton = document.getElementById("service_update_delete_button");
+    let serviceUpdateDeleteButton = document.getElementById("service_update_delete_button");
     if (element.value != "none") {
         serviceUpdateDeleteButton.href = "api/admin/service/update_delete/" + element.value + "/";
     } else {
@@ -44,9 +44,9 @@ function setServiceUpdateDeleteAPIUrlOnAdminPage(element) {
  * Sets the href value of the link button to get the available booking slots for a specific service, on the Admin page.
  */
 function setAvailableBookingSlotsAPIUrlOnAdminPage() {
-    var listAvailableBookingSlotsButton = document.getElementById("available_booking_slots_button");
-    var dateInput = document.getElementById("date");
-    var serviceInput = document.getElementById("service_list");
+    let listAvailableBookingSlotsButton = document.getElementById("available_booking_slots_button");
+    const dateInput = document.getElementById("date");
+    const serviceInput = document.getElementById("service_list");
     if (serviceInput.value != "none") {
         listAvailableBookingSlotsButton.href = "api/booking/available_booking_slots?day=" + dateInput.value + "&service_id=" + serviceInput.value;
     } else {
@@ -58,7 +58,7 @@ function setAvailableBookingSlotsAPIUrlOnAdminPage() {
  * Sets the gallery image deletion button enabled or disabled based on if there is an image selected, on the Admin page.
  */
 function enableDisableGalleryImageDeleteButtonOnAdminPage(element) {
-    var deleteButton = document.getElementById("image_delete_button");
+    let deleteButton = document.getElementById("image_delete_button");
     if (element.value != "none") {
         deleteButton.disabled = false;
     } else {
@@ -70,7 +70,7 @@ function enableDisableGalleryImageDeleteButtonOnAdminPage(element) {
  * Sets the href value of the link button to cancel a user, on the Admin page.
  */
 function setCancelUserAPIUrlOnAdminPage(element) {
-    var cancelUserButton = document.getElementById("cancel_user_button");
+    let cancelUserButton = document.getElementById("cancel_user_button");
     if (element.value != "none") {
         cancelUserButton.href = "api/admin/user/" + element.value + "/cancel";
     } else {
@@ -79,10 +79,82 @@ function setCancelUserAPIUrlOnAdminPage(element) {
 }
 
 /**
+ * Sets the href value of the link button to view the services, on the Admin page.
+ */
+function setListServicesAPIUrlOnAdminPage(element) {
+    const href = "api/admin/services"
+    let link_params = ""
+    let viewServicesButton = document.getElementById("view_services_button");
+    const radioButtons = document.querySelectorAll('input[name="rg_service_filter"]');
+
+    for (const radioButton of radioButtons) {
+        if (radioButton.checked) {
+            if (radioButton.value == "active") {
+                link_params = "?active=true";
+            } else if (radioButton.value == "inactive") {
+                link_params = "?active=false";
+            }
+            break;
+        }
+    }
+    viewServicesButton.href = href + link_params;
+}
+
+/**
+ * Sets the href value of the link button to view the bookings, on the Admin page.
+ */
+function setListBookingsAPIUrlOnAdminPage(element) {
+    const href = "api/admin/bookings"
+    let link_params = ""
+    let viewBookingsButton = document.getElementById("view_bookings_button");
+    const cbActiveBooking = document.getElementById("cb_active_booking");
+    const radioButtons = document.querySelectorAll('input[name="rg_booking_filter"]');
+
+    if (cbActiveBooking.checked) {
+        link_params += "&active=false";
+    } else {
+        link_params += "&active=true";
+    }
+    for (const radioButton of radioButtons) {
+        if (radioButton.checked) {
+            if (radioButton.value == "active") {
+                link_params += "&cancelled=false";
+            } else if (radioButton.value == "cancelled") {
+                link_params += "&cancelled=true";
+            }
+            break;
+        }
+    }
+    viewBookingsButton.href = href + "?" + link_params.substring(1);
+}
+
+/**
+ * Sets the href value of the link button to view the users, on the Admin page.
+ */
+function setListUsersAPIUrlOnAdminPage(element) {
+    const href = "api/admin/users"
+    let link_params = ""
+    let viewUsersButton = document.getElementById("view_users_button");
+    const radioButtons = document.querySelectorAll('input[name="rg_user_filter"]');
+
+    for (const radioButton of radioButtons) {
+        if (radioButton.checked) {
+            if (radioButton.value == "active") {
+                link_params = "?active=true";
+            } else if (radioButton.value == "inactive") {
+                link_params = "?active=false";
+            }
+            break;
+        }
+    }
+    viewUsersButton.href = href + link_params;
+}
+
+/**
  * Displays and enlarges an image in the gallery page.
  */
 function displayGalleryImage(img) {
-    var expandedImage = document.getElementById("expanded_image");
+    let expandedImage = document.getElementById("expanded_image");
     expandedImage.src = img.src;
     expandedImage.parentElement.parentElement.parentElement.style.display = "grid";
 }
@@ -105,7 +177,7 @@ function setInitialDateOnBookingPage() {
  * Displays the booking price corresponding to the dog size.
  */
 function changeBookingPriceForDogSize(element) {
-    var value = element.value
+    const value = element.value
     document.getElementById("small").style.display = "none";
     document.getElementById("medium").style.display = "none";
     document.getElementById("big").style.display = "none";

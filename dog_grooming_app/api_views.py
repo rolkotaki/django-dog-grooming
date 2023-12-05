@@ -104,15 +104,15 @@ class ServiceList(ListAPIView):
 
     def get_queryset(self):
         """
-        Overrides the get_queryset method to be able to filter on active Services.
+        Overrides the get_queryset method to be able to filter on active and inactive Services.
         """
         active = self.request.query_params.get('active', None)
         if active is None:
             return super().get_queryset()
         queryset = Service.objects.all()
-        if active.lower() == 'true':
-            return queryset.filter(Q(active=True))
-        return queryset
+        if active.lower() == 'false':
+            return queryset.filter(Q(active=False))
+        return queryset.filter(Q(active=True))
 
 
 class ServiceRetrieveUpdateDestroy(RetrieveUpdateDestroyAPIView):

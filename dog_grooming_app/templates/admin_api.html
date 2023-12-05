@@ -18,8 +18,16 @@
 
         <h3>{% trans 'Services:' %}</h3>
         <div>
+            <a id="view_services_button" class="a_button blue_button" href="{% url 'api_services' %}">{% trans 'View' %}</a>
+            <label>{% trans 'Filter:' %}</label>
+            <input type="radio" name="rg_service_filter" id="rb_all_service" value="all" checked onchange="setListServicesAPIUrlOnAdminPage(this)" />
+            <label for="rb_all_service">{% trans 'all' %}</label>
+            <input type="radio" name="rg_service_filter" id="rb_active_service" value="active" onchange="setListServicesAPIUrlOnAdminPage(this)" />
+            <label for="rb_active_service">{% trans 'active' %}</label>
+            <input type="radio" name="rg_service_filter" id="rb_inactive_service" value="inactive" onchange="setListServicesAPIUrlOnAdminPage(this)" />
+            <label for="rb_inactive_service">{% trans 'inactive' %}</label>
+            <br><br>
             <a class="a_button green_button" href="{% url 'api_service_create' %}">{% trans 'Create' %}</a>
-            <a class="a_button blue_button" href="{% url 'api_services' %}">{% trans 'View' %}</a>
             <br><br>
             <a id="service_update_delete_button" class="a_button red_button" >
                 {% trans 'Update/Delete' %}</a>
@@ -33,8 +41,27 @@
 
         <h3>{% trans 'Bookings:' %}</h3>
         <div>
+            <table>
+                <tr>
+                    <td style="padding-left: 0px; margin-left: 0px;">
+                        <a id="view_bookings_button" class="a_button blue_button" href="{% url 'api_bookings' %}">{% trans 'View' %}</a>
+                    </td>
+                    <td>
+                        <label>{% trans 'Filter:' %}</label>
+                        <input type="radio" name="rg_booking_filter" id="rb_all_booking" value="all" onchange="setListBookingsAPIUrlOnAdminPage(this)" />
+                        <label for="rb_all_booking">{% trans 'all' %}</label>
+                        <input type="radio" name="rg_booking_filter" id="rb_active_booking" value="active" checked onchange="setListBookingsAPIUrlOnAdminPage(this)" />
+                        <label for="rb_active_booking">{% trans 'active' %}</label>
+                        <input type="radio" name="rg_booking_filter" id="rb_cancelled_booking" value="cancelled" onchange="setListBookingsAPIUrlOnAdminPage(this)" />
+                        <label for="rb_cancelled_booking">{% trans 'cancelled' %}</label>
+                        <br>
+                        <label for="cb_active_booking">{% trans 'Include expired:' %}</label>
+                        <input id="cb_active_booking" type="checkbox" value="include_expired" onchange="setListBookingsAPIUrlOnAdminPage(this)"/>
+                    </td>
+                </tr>
+            </table>
+            <br>
             <a class="a_button green_button" href="{% url 'api_booking_create' %}">{% trans 'Create' %}</a>
-            <a class="a_button blue_button" href="{% url 'api_bookings' %}">{% trans 'View' %}</a>
             <br><br>
             <a id="available_booking_slots_button" class="a_button blue_button" >
                 {% trans 'List Available Slots' %}</a>
@@ -43,6 +70,27 @@
                 <option value="none" >{% trans 'Choose a service!' %}</option>
                 {% for active_service in active_services %}
                     <option value="{{ active_service.id }}" >{{ active_service.id }} - {{ active_service.service_name_hu }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <h3>{% trans 'Users:' %}</h3>
+        <div>
+            <a id="view_users_button" class="a_button blue_button" href="{% url 'api_users' %}">{% trans 'View' %}</a>
+            <label>{% trans 'Filter:' %}</label>
+            <input type="radio" name="rg_user_filter" id="rb_all_user" value="all" checked onchange="setListUsersAPIUrlOnAdminPage(this)" />
+            <label for="rb_all_user">{% trans 'all' %}</label>
+            <input type="radio" name="rg_user_filter" id="rb_active_user" value="active" onchange="setListUsersAPIUrlOnAdminPage(this)" />
+            <label for="rb_active_user">{% trans 'active' %}</label>
+            <input type="radio" name="rg_user_filter" id="rb_inactive_user" value="inactive" onchange="setListUsersAPIUrlOnAdminPage(this)" />
+            <label for="rb_inactive_user">{% trans 'inactive' %}</label>
+            <br><br>
+            <a id="cancel_user_button" class="a_button red_button" >
+                {% trans 'Cancel User' %}</a>
+            <select onchange="setCancelUserAPIUrlOnAdminPage(this)" class="select_input admin_user_list">
+                <option value="none" >{% trans 'Choose a user!' %}</option>
+                {% for user in users %}
+                    <option value="{{ user.id }}" >{{ user.id }} - {{ user.username }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -68,20 +116,6 @@
                     </select>
                 </form>
             </p>
-        </div>
-
-        <h3>{% trans 'Users:' %}</h3>
-        <div>
-            <a class="a_button blue_button" href="{% url 'api_users' %}">{% trans 'View' %}</a>
-            <br><br>
-            <a id="cancel_user_button" class="a_button red_button" >
-                {% trans 'Cancel User' %}</a>
-            <select onchange="setCancelUserAPIUrlOnAdminPage(this)" class="select_input admin_user_list">
-                <option value="none" >{% trans 'Choose a user!' %}</option>
-                {% for user in users %}
-                    <option value="{{ user.id }}" >{{ user.id }} - {{ user.username }}</option>
-                {% endfor %}
-            </select>
         </div>
 
         <div class="form_success_message">
