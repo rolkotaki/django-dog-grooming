@@ -100,11 +100,11 @@ The translations are in the `locale` folder, inside you will have a subfolder fo
 updating existing translations we can do the following steps.<br>
 Create the translation files *(from the repository root)*:
 ```
-django-admin makemessages -all --ignore=env --ignore=docker --ignore=*.yml
+django-admin makemessages -all --ignore=env --ignore=docker
 ```
 Compile the translations after providing them:
 ```
-django-admin compilemessages --ignore=env --ignore=docker --ignore=*.yml
+django-admin compilemessages --ignore=env --ignore=docker
 ```
 <br>
 Python version used for the development: Python 3.9.6

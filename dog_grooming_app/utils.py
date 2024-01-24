@@ -22,7 +22,7 @@ class BookingManager:
         Returns a list of tuples where each tuple contains the start and end time of the booking.
         The required break after the service is included in the returned end times.
         """
-        bookings = Booking.objects.filter(date=day).order_by('time')
+        bookings = Booking.objects.filter(date=day, cancelled=False).order_by('time')
         return [(booking.time, (datetime.datetime.combine(day, booking.time) + duration_with_break).time())
                 for booking in bookings]
 

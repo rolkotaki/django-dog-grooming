@@ -6,7 +6,7 @@
 <div class="content content_booking">
 
     <div class="content_form content_booking_form">
-        <p class="page_title">Booking</p>
+        <p class="page_title">{% trans 'Booking' %}</p>
         <form class="booking_form" method="POST" novalidate>
             {% csrf_token %}
             <input type="hidden" id="service_id" value="{{ service.id }}">
