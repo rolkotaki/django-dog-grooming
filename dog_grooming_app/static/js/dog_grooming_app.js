@@ -190,8 +190,9 @@ function changeBookingPriceForDogSize(element) {
  * of the select element containing the available booking slots.
  */
 function fetchAvailableBookingTimeSlots() {
+    const currentLanguage = document.getElementById('language-data').getAttribute('data-language');
     $.ajax({
-        url: '/api/booking/available_booking_slots',
+        url: '/' + currentLanguage + '/api/booking/available_booking_slots',
         type: 'GET',
         data: {day: $('#date').val(), service_id: $('#service_id').val()},
         success: function(response) {
