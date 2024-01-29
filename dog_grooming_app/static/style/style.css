@@ -555,3 +555,28 @@ html, body {
 #hi_username {
   color: #495057;
 }
+
+.pagination {
+  position: relative;
+  margin: 10px auto 40px auto;
+  text-align: center;
+}
+
+.page_links {
+  position: relative;
+  margin: 20px auto 80px auto;
+  text-align: center;
+}
+
+.page_link {
+  text-decoration: none;
+  color: #1C6EA4;
+  font-size: 16px;
+  margin: auto;
+}
+
+.current_page {
+  color: #1C6EA4;
+  font-weight: bold;
+  font-size: 18px;
+}

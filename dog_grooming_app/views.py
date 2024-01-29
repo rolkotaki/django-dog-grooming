@@ -12,11 +12,13 @@ from django.contrib.sites.shortcuts import get_current_site
 from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
+from django.core.paginator import Paginator
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
 from .utils import GalleryManager, BookingManager
 from .tokens import account_activation_token
+from .constants import PAGINATION_PAGES, SERVICES_PER_PAGE, BOOKINGS_PER_PAGE, GALLERY_IMAGES_PER_PAGE
 
 
 class HomePage(TemplateView):
@@ -172,7 +174,26 @@ class GalleryPage(TemplateView):
         Overriding the get_context_data method to add the image list from the gallery folder.
         """
         context = super().get_context_data(**kwargs)
-        context["images"] = GalleryManager.get_gallery_image_list()
+
+        images = GalleryManager.get_gallery_image_list()
+
+        page_number = int(self.request.GET.get('page', 1))
+        paginator = Paginator(images, GALLERY_IMAGES_PER_PAGE)
+        page = paginator.get_page(page_number)
+        context["page"] = page
+        context["images"] = page.object_list
+
+        pages_before_after = int(PAGINATION_PAGES / 2)
+        if paginator.num_pages <= PAGINATION_PAGES:
+            pages = [i for i in range(1, paginator.num_pages + 1)]
+        elif paginator.num_pages - page.number < pages_before_after:
+            pages = [i for i in range(paginator.num_pages - PAGINATION_PAGES + 1, paginator.num_pages + 1)]
+        elif page.number - pages_before_after <= 0:
+            pages = [i for i in range(1, PAGINATION_PAGES + 1)]
+        else:
+            pages = [i for i in range(page.number - pages_before_after, page.number + pages_before_after + 1)]
+        context["pages"] = pages
+
         return context
 
 
@@ -187,7 +208,25 @@ class ServiceListPage(TemplateView):
         Overriding the get_context_data method to add the list of active Services.
         """
         context = super().get_context_data(**kwargs)
-        context["services"] = Service.objects.filter(active=True)
+        services = Service.objects.filter(active=True).order_by('id')
+
+        page_number = int(self.request.GET.get('page', 1))
+        paginator = Paginator(services, SERVICES_PER_PAGE)
+        page = paginator.get_page(page_number)
+        context["page"] = page
+        context["services"] = page.object_list
+
+        pages_before_after = int(PAGINATION_PAGES / 2)
+        if paginator.num_pages <= PAGINATION_PAGES:
+            pages = [i for i in range(1, paginator.num_pages + 1)]
+        elif paginator.num_pages - page.number < pages_before_after:
+            pages = [i for i in range(paginator.num_pages - PAGINATION_PAGES + 1, paginator.num_pages + 1)]
+        elif page.number - pages_before_after <= 0:
+            pages = [i for i in range(1, PAGINATION_PAGES + 1)]
+        else:
+            pages = [i for i in range(page.number - pages_before_after, page.number + pages_before_after + 1)]
+        context["pages"] = pages
+
         return context
 
 
@@ -296,7 +335,25 @@ class UserBookingsPage(LoginRequiredMixin, TemplateView):
         booking_filter = Q(cancelled=False) & Q(user=self.request.user.id) & \
                           (Q(date__gt=datetime.date.today()) |
                            (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
-        context["bookings"] = Booking.objects.filter(booking_filter).order_by('date', 'time')
+        bookings = Booking.objects.filter(booking_filter).order_by('date', 'time')
+
+        page_number = int(self.request.GET.get('page', 1))
+        paginator = Paginator(bookings, BOOKINGS_PER_PAGE)
+        page = paginator.get_page(page_number)
+        context["page"] = page
+        context["bookings"] = page.object_list
+
+        pages_before_after = int(PAGINATION_PAGES / 2)
+        if paginator.num_pages <= PAGINATION_PAGES:
+            pages = [i for i in range(1, paginator.num_pages + 1)]
+        elif paginator.num_pages - page.number < pages_before_after:
+            pages = [i for i in range(paginator.num_pages - PAGINATION_PAGES + 1, paginator.num_pages + 1)]
+        elif page.number - pages_before_after <= 0:
+            pages = [i for i in range(1, PAGINATION_PAGES + 1)]
+        else:
+            pages = [i for i in range(page.number - pages_before_after, page.number + pages_before_after + 1)]
+        context["pages"] = pages
+
         return context
 
 
@@ -326,9 +383,27 @@ class AdminBookingsPage(LoginRequiredMixin, TemplateView):
                                (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
         else:
             booking_filter = (Q(cancelled=False) | Q(cancelled=cancelled)) & Q(date=day)
-        context["bookings"] = Booking.objects.filter(booking_filter).order_by('date', 'time')
         context['day'] = '' if not day else day
         context['cancelled'] = True if cancelled else False
+        bookings = Booking.objects.filter(booking_filter).order_by('date', 'time')
+
+        page_number = int(self.request.GET.get('page', 1))
+        paginator = Paginator(bookings, BOOKINGS_PER_PAGE)
+        page = paginator.get_page(page_number)
+        context["page"] = page
+        context["bookings"] = page.object_list
+
+        pages_before_after = int(PAGINATION_PAGES / 2)
+        if paginator.num_pages <= PAGINATION_PAGES:
+            pages = [i for i in range(1, paginator.num_pages + 1)]
+        elif paginator.num_pages - page.number < pages_before_after:
+            pages = [i for i in range(paginator.num_pages - PAGINATION_PAGES + 1, paginator.num_pages + 1)]
+        elif page.number - pages_before_after <= 0:
+            pages = [i for i in range(1, PAGINATION_PAGES + 1)]
+        else:
+            pages = [i for i in range(page.number - pages_before_after, page.number + pages_before_after + 1)]
+        context["pages"] = pages
+
         return context
 
     def post(self, request, *args, **kwargs):

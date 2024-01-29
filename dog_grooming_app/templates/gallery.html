@@ -4,6 +4,8 @@
 {% load i18n %}
 {% load static %}
 
+<div id="content_wrapper">
+
 <div class="content_gallery">
 
     {% for image in images %}
@@ -23,5 +25,33 @@
         </div>
     </div>
 </div>
+
+</div>
+
+{% if page.paginator.num_pages > 1 %}
+<div class="pagination">
+    <span class="page_links">
+        {% if page.has_previous %}
+            <a class="page_link" href="?page=1">&laquo; {% trans 'first' %}</a>
+            <span>&middot;</span>
+        {% endif %}
+
+        {% for i in pages %}
+            {% if page.number == i %}
+                <span class="current_page">{{ page.number }}</span>
+            {% else %}
+                <a class="page_link" href="?page={{ i }}">{{ i }}</a>
+            {% endif %}
+            {% if page.paginator.num_pages != i or page.paginator.num_pages != page.number %}
+                <span>&middot;</span>
+            {% endif %}
+        {% endfor %}
+
+        {% if page.has_next %}
+            <a class="page_link" href="?page={{ page.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+{% endif %}
 
 {% endblock %}

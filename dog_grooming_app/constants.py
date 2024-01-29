@@ -10,6 +10,12 @@ BREAK = 15
 # time interval in minutes after which we check if there is an available booking slot
 BOOKING_SLOT_SEARCH_TIME_INTERVAL = 15
 
+# pagination constants
+PAGINATION_PAGES = 5  # should be an odd number
+SERVICES_PER_PAGE = 12
+BOOKINGS_PER_PAGE = 12
+GALLERY_IMAGES_PER_PAGE = 12
+
 # Email templates
 BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_USER = str(_('Your booking has been cancelled'))
 BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_ADMIN = str(_('A booking has been cancelled'))

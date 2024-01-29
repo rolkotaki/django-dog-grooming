@@ -16,14 +16,16 @@ from django.db.utils import Error
 from django.db import models
 from django.contrib import messages
 from unittest.mock import Mock, patch, mock_open
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 
+import dog_grooming_app.constants
 from .models import CustomUser, Contact, Service, Booking
 from .api_views import CancelUser, CancelBooking, ListAvailableBookingSlots, ServiceRetrieveUpdateDestroy
 from .views import ContactPage, admin_api_page
 from .utils import GalleryManager, BookingManager
 from .tokens import account_activation_token
+from .constants import SERVICES_PER_PAGE, BOOKINGS_PER_PAGE, GALLERY_IMAGES_PER_PAGE, PAGINATION_PAGES
 
 
 class ContactAPITestCase(APITestCase):
@@ -1022,17 +1024,68 @@ class GalleryViewTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'gallery.html')
 
+    def test_02_pagination_not_displayed(self):
+        """Tests that the pagination is not displayed when we have no more items than the maximum allowed on a page."""
+        response = self.client.get(reverse('gallery'))
+        self.assertNotContains(response, '<div class="pagination">')
+
+    def test_03_pagination_pages(self):
+        """Tests that the pagination is displayed when we have more items than the maximum allowed on a page."""
+        with patch.object(dog_grooming_app.views.GalleryPage, '__init__', return_value=None):
+            mock_gallery = dog_grooming_app.views.GalleryPage()
+            mock_gallery.request = Mock()
+            mock_gallery.request.GET = {'page': 1}
+            images = ['{}.jpg'.format(i) for i in range(GALLERY_IMAGES_PER_PAGE)]
+            with patch.object(GalleryManager, 'get_gallery_image_list', return_value=images):
+                context = mock_gallery.get_context_data()
+                self.assertListEqual(context['pages'], [1])
+                self.assertListEqual(context['images'], images)
+
+            mock_gallery.request.GET = {'page': 1}
+            images = ['{}.jpg'.format(i) for i in range(GALLERY_IMAGES_PER_PAGE + 1)]
+            with patch.object(GalleryManager, 'get_gallery_image_list', return_value=images):
+                context = mock_gallery.get_context_data()
+                self.assertListEqual(context['pages'], [1, 2])
+                self.assertListEqual(context['images'], images[:GALLERY_IMAGES_PER_PAGE])
+            mock_gallery.request.GET = {'page': 2}
+            with patch.object(GalleryManager, 'get_gallery_image_list', return_value=images):
+                context = mock_gallery.get_context_data()
+                self.assertListEqual(context['pages'], [1, 2])
+                self.assertListEqual(context['images'], images[GALLERY_IMAGES_PER_PAGE:])
+
+            mock_gallery.request.GET = {'page': 2}
+            images = ['{}.jpg'.format(i) for i in range(GALLERY_IMAGES_PER_PAGE * PAGINATION_PAGES + 1)]
+            with patch.object(GalleryManager, 'get_gallery_image_list', return_value=images):
+                context = mock_gallery.get_context_data()
+                self.assertListEqual(context['pages'], [i for i in range(1, PAGINATION_PAGES + 1)])
+                self.assertListEqual(context['images'], images[GALLERY_IMAGES_PER_PAGE:GALLERY_IMAGES_PER_PAGE * 2])
+            mock_gallery.request.GET = {'page': PAGINATION_PAGES}
+            with patch.object(GalleryManager, 'get_gallery_image_list', return_value=images):
+                context = mock_gallery.get_context_data()
+                self.assertListEqual(context['pages'], [i for i in range(2, PAGINATION_PAGES + 2)])
+                self.assertListEqual(context['images'], images[GALLERY_IMAGES_PER_PAGE * (PAGINATION_PAGES - 1):
+                                                               GALLERY_IMAGES_PER_PAGE * PAGINATION_PAGES])
+
+            page = int(PAGINATION_PAGES / 2) + 1
+            mock_gallery.request.GET = {'page': page}
+            images = ['{}.jpg'.format(i) for i in range(GALLERY_IMAGES_PER_PAGE * (PAGINATION_PAGES + 1) + 1)]
+            with patch.object(GalleryManager, 'get_gallery_image_list', return_value=images):
+                context = mock_gallery.get_context_data()
+                self.assertListEqual(context['pages'], [i for i in range(1, PAGINATION_PAGES + 1)])
+                self.assertListEqual(context['images'], images[GALLERY_IMAGES_PER_PAGE * (page - 1):
+                                                               GALLERY_IMAGES_PER_PAGE * page])
+
 
 class ServiceViewTestCase(TestCase):
     """
     Test cases for the Services and Service views.
     """
 
-    def setUp(self):
-        self.photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
-        with open(self.photo_path, 'rb') as photo_data:
+    def _create_service(self):
+        photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
+        with open(photo_path, 'rb') as photo_data:
             image = SimpleUploadedFile("image.jpg", photo_data.read(), content_type="image/jpeg")
-        self.service_attrs = {
+        service_attrs = {
             'service_name_en': 'Service name EN',
             'service_name_hu': 'Service name HU',
             'price_default': 1000,
@@ -1044,7 +1097,10 @@ class ServiceViewTestCase(TestCase):
             'photo': image,
             'active': True
         }
-        self.service = Service.objects.create(**self.service_attrs)
+        return Service.objects.create(**service_attrs)
+
+    def setUp(self):
+        self.service = self._create_service()
 
     def tearDown(self):
         try:
@@ -1120,6 +1176,50 @@ class ServiceViewTestCase(TestCase):
         pattern = r'<p id="medium" class="service_price">1000 Ft</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
+
+    def test_08_pagination_not_displayed(self):
+        """Tests that the pagination is not displayed when we have no more items than the maximum allowed on a page."""
+        response = self.client.get(reverse('services'))
+        self.assertNotContains(response, '<div class="pagination">')
+
+    def test_09_pagination_is_displayed(self):
+        """Tests that the pagination is displayed when we have more items than the maximum allowed on a page."""
+        for i in range(SERVICES_PER_PAGE):
+            self._create_service()  # so that we have one more service than the maximum allowed on a page
+        response = self.client.get(reverse('services'))
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page=2">last &raquo;</a>')
+        self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
+    def test_10_pagination_links_are_correct(self):
+        """Tests that the pagination links are all displayed correctly."""
+        for i in range(SERVICES_PER_PAGE * PAGINATION_PAGES):
+            self._create_service()
+        response = self.client.get(reverse('services'), {'page': 2})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+        self.assertContains(response, '<span class="current_page">2</span>')
+
+        response = self.client.get(reverse('services'), {'page': PAGINATION_PAGES})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+        self.assertContains(response, '<span class="current_page">{}</span>'.format(PAGINATION_PAGES))
+
+        response = self.client.get(reverse('services'))
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
+        response = self.client.get(reverse('services'), {'page': PAGINATION_PAGES + 1})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertNotContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
 
 
 class AdminAPIViewTestCase(TestCase):
@@ -1495,6 +1595,53 @@ class UserBookingsViewTestCase(TestCase):
         response = self.client.get(reverse('user_bookings'))
         self.assertContains(response, 'You have no bookings.')
 
+    def test_07_pagination_not_displayed(self):
+        """Tests that the pagination is not displayed when we have no more items than the maximum allowed on a page."""
+        self._login()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertNotContains(response, '<div class="pagination">')
+
+    def test_08_pagination_is_displayed(self):
+        """Tests that the pagination is displayed when we have more items than the maximum allowed on a page."""
+        for i in range(BOOKINGS_PER_PAGE):
+            self._create_booking()  # so that we have one more booking than the maximum allowed on a page
+        self._login()
+        response = self.client.get(reverse('user_bookings'))
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page=2">last &raquo;</a>')
+        self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
+    def test_09_pagination_links_are_correct(self):
+        """Tests that the pagination links are all displayed correctly."""
+        for i in range(BOOKINGS_PER_PAGE * PAGINATION_PAGES):
+            self._create_booking()
+        self._login()
+        response = self.client.get(reverse('user_bookings'), {'page': 2})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+        self.assertContains(response, '<span class="current_page">2</span>')
+
+        response = self.client.get(reverse('user_bookings'), {'page': PAGINATION_PAGES})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+        self.assertContains(response, '<span class="current_page">{}</span>'.format(PAGINATION_PAGES))
+
+        response = self.client.get(reverse('user_bookings'))
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
+        response = self.client.get(reverse('user_bookings'), {'page': PAGINATION_PAGES + 1})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertNotContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
 
 class AdminBookingsViewTestCase(TestCase):
     """
@@ -1727,6 +1874,53 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
+
+    def test_12_pagination_not_displayed(self):
+        """Tests that the pagination is not displayed when we have no more items than the maximum allowed on a page."""
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertNotContains(response, '<div class="pagination">')
+
+    def test_13_pagination_is_displayed(self):
+        """Tests that the pagination is displayed when we have more items than the maximum allowed on a page."""
+        for i in range(BOOKINGS_PER_PAGE):
+            self._create_booking()  # so that we have one more booking than the maximum allowed on a page
+        self._login()
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page=2">last &raquo;</a>')
+        self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
+    def test_14_pagination_links_are_correct(self):
+        """Tests that the pagination links are all displayed correctly."""
+        for i in range(BOOKINGS_PER_PAGE * PAGINATION_PAGES):
+            self._create_booking()
+        self._login()
+        response = self.client.get(reverse('admin_bookings'), {'page': 2})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+        self.assertContains(response, '<span class="current_page">2</span>')
+
+        response = self.client.get(reverse('admin_bookings'), {'page': PAGINATION_PAGES})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+        self.assertContains(response, '<span class="current_page">{}</span>'.format(PAGINATION_PAGES))
+
+        response = self.client.get(reverse('admin_bookings'))
+        self.assertContains(response, '<div class="pagination">')
+        self.assertContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
+
+        response = self.client.get(reverse('admin_bookings'), {'page': PAGINATION_PAGES + 1})
+        self.assertContains(response, '<div class="pagination">')
+        self.assertNotContains(response, '<a class="page_link" href="?page={}">last &raquo;</a>'.format(
+            PAGINATION_PAGES + 1))
+        self.assertContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
 
 
 class ModelsTestCase(TestCase):

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-24 17:11+0100\n"
+"POT-Creation-Date: 2024-01-28 21:57+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -77,23 +77,23 @@ msgstr "Hiba történt a felhasználó %(user_id)d deaktiválása közben"
 msgid "User with user ID %(user_id)d does not exist"
 msgstr "A %(user_id)d azonosítóval nem létezik felhasználó"
 
-#: dog_grooming_app/constants.py:14
+#: dog_grooming_app/constants.py:20
 msgid "Your booking has been cancelled"
 msgstr "A foglalásod töröltük"
 
-#: dog_grooming_app/constants.py:15
+#: dog_grooming_app/constants.py:21
 msgid "A booking has been cancelled"
 msgstr "Töröltek egy foglalást"
 
-#: dog_grooming_app/constants.py:16
+#: dog_grooming_app/constants.py:22
 msgid "Your account has been deactivated"
 msgstr "Deaktiváltuk a fiókodat"
 
-#: dog_grooming_app/constants.py:17
+#: dog_grooming_app/constants.py:23
 msgid "Confirm your registration at Emma Dog Grooming Salon"
 msgstr "Erősítsd meg a regisztrációdat az Emma Kutyakozmetika Szalonnál"
 
-#: dog_grooming_app/constants.py:18
+#: dog_grooming_app/constants.py:24
 msgid "Someone has requested a callback"
 msgstr "Valaki visszahívást kért"
 
@@ -138,121 +138,121 @@ msgstr "Kérlek írd le a kutyád fajtáját és a szükséges tennivalókat ...
 msgid "Comment:"
 msgstr "Megjegyzés:"
 
-#: dog_grooming_app/templates/admin_api.html:9
+#: dog_grooming_app/templates/admin_api.html:11
 msgid "Admin APIs"
 msgstr "Admin APIk"
 
-#: dog_grooming_app/templates/admin_api.html:13
+#: dog_grooming_app/templates/admin_api.html:15
 msgid "Contact:"
 msgstr "Kapcsolat:"
 
-#: dog_grooming_app/templates/admin_api.html:15
-#: dog_grooming_app/templates/admin_api.html:30
-#: dog_grooming_app/templates/admin_api.html:64
+#: dog_grooming_app/templates/admin_api.html:17
+#: dog_grooming_app/templates/admin_api.html:32
+#: dog_grooming_app/templates/admin_api.html:66
 msgid "Create"
 msgstr "Létrehoz"
 
-#: dog_grooming_app/templates/admin_api.html:16
-#: dog_grooming_app/templates/admin_api.html:33
+#: dog_grooming_app/templates/admin_api.html:18
+#: dog_grooming_app/templates/admin_api.html:35
 msgid "Update/Delete"
 msgstr "Frissít/Töröl"
 
-#: dog_grooming_app/templates/admin_api.html:19
+#: dog_grooming_app/templates/admin_api.html:21
 msgid "Services:"
 msgstr "Szolgáltatások:"
 
-#: dog_grooming_app/templates/admin_api.html:21
-#: dog_grooming_app/templates/admin_api.html:47
-#: dog_grooming_app/templates/admin_api.html:79
+#: dog_grooming_app/templates/admin_api.html:23
+#: dog_grooming_app/templates/admin_api.html:49
+#: dog_grooming_app/templates/admin_api.html:81
 msgid "View"
 msgstr "Megnéz"
-
-#: dog_grooming_app/templates/admin_api.html:22
-#: dog_grooming_app/templates/admin_api.html:50
-#: dog_grooming_app/templates/admin_api.html:80
-msgid "Filter:"
-msgstr "Szűrés:"
 
 #: dog_grooming_app/templates/admin_api.html:24
 #: dog_grooming_app/templates/admin_api.html:52
 #: dog_grooming_app/templates/admin_api.html:82
-msgid "all"
-msgstr "összes"
+msgid "Filter:"
+msgstr "Szűrés:"
 
 #: dog_grooming_app/templates/admin_api.html:26
 #: dog_grooming_app/templates/admin_api.html:54
 #: dog_grooming_app/templates/admin_api.html:84
+msgid "all"
+msgstr "összes"
+
+#: dog_grooming_app/templates/admin_api.html:28
+#: dog_grooming_app/templates/admin_api.html:56
+#: dog_grooming_app/templates/admin_api.html:86
 msgid "active"
 msgstr "aktív"
 
-#: dog_grooming_app/templates/admin_api.html:28
-#: dog_grooming_app/templates/admin_api.html:86
+#: dog_grooming_app/templates/admin_api.html:30
+#: dog_grooming_app/templates/admin_api.html:88
 msgid "inactive"
 msgstr "inaktív"
 
-#: dog_grooming_app/templates/admin_api.html:35
-#: dog_grooming_app/templates/admin_api.html:70
+#: dog_grooming_app/templates/admin_api.html:37
+#: dog_grooming_app/templates/admin_api.html:72
 msgid "Choose a service!"
 msgstr "Válassz egy szolgáltatást!"
 
-#: dog_grooming_app/templates/admin_api.html:42
+#: dog_grooming_app/templates/admin_api.html:44
 msgid "Bookings:"
 msgstr "Foglalások:"
 
-#: dog_grooming_app/templates/admin_api.html:56
+#: dog_grooming_app/templates/admin_api.html:58
 msgid "cancelled"
 msgstr "törölt"
 
-#: dog_grooming_app/templates/admin_api.html:58
+#: dog_grooming_app/templates/admin_api.html:60
 msgid "Include expired:"
 msgstr "Lejártakkal együtt:"
 
-#: dog_grooming_app/templates/admin_api.html:67
+#: dog_grooming_app/templates/admin_api.html:69
 msgid "List Available Slots"
 msgstr "Foglalható Időpontok"
 
-#: dog_grooming_app/templates/admin_api.html:77
+#: dog_grooming_app/templates/admin_api.html:79
 msgid "Users:"
 msgstr "Felhasználók:"
 
-#: dog_grooming_app/templates/admin_api.html:89
+#: dog_grooming_app/templates/admin_api.html:91
 msgid "Cancel User"
 msgstr "Töröld a Felhasználót"
 
-#: dog_grooming_app/templates/admin_api.html:91
+#: dog_grooming_app/templates/admin_api.html:93
 msgid "Choose a user!"
 msgstr "Válassz egy felhasználót!"
 
-#: dog_grooming_app/templates/admin_api.html:98
+#: dog_grooming_app/templates/admin_api.html:100
 msgid "Gallery Images:"
 msgstr "Galéria Képek:"
 
-#: dog_grooming_app/templates/admin_api.html:103
+#: dog_grooming_app/templates/admin_api.html:105
 msgid "Upload"
 msgstr "Feltölt"
 
-#: dog_grooming_app/templates/admin_api.html:110
+#: dog_grooming_app/templates/admin_api.html:112
 msgid "Delete"
 msgstr "Töröl"
 
-#: dog_grooming_app/templates/admin_api.html:112
+#: dog_grooming_app/templates/admin_api.html:114
 msgid "Choose an image!"
 msgstr "Válassz egy képet!"
 
-#: dog_grooming_app/templates/admin_bookings.html:12
+#: dog_grooming_app/templates/admin_bookings.html:14
 msgid "Cancelled:"
 msgstr "Törölt:"
 
-#: dog_grooming_app/templates/admin_bookings.html:14
+#: dog_grooming_app/templates/admin_bookings.html:16
 msgid "Search"
 msgstr "Keres"
 
-#: dog_grooming_app/templates/admin_bookings.html:15
+#: dog_grooming_app/templates/admin_bookings.html:17
 msgid "All"
 msgstr "Összes"
 
-#: dog_grooming_app/templates/admin_bookings.html:40
-#: dog_grooming_app/templates/user_bookings.html:29
+#: dog_grooming_app/templates/admin_bookings.html:42
+#: dog_grooming_app/templates/user_bookings.html:31
 #, python-format
 msgid ""
 "\n"
@@ -263,14 +263,28 @@ msgstr ""
 "                Időtartam: %(max_duration)s perc\n"
 "            "
 
-#: dog_grooming_app/templates/admin_bookings.html:53
-#: dog_grooming_app/templates/user_bookings.html:35
+#: dog_grooming_app/templates/admin_bookings.html:55
+#: dog_grooming_app/templates/user_bookings.html:37
 msgid "Cancel"
 msgstr "Töröl"
 
-#: dog_grooming_app/templates/admin_bookings.html:55
+#: dog_grooming_app/templates/admin_bookings.html:57
 msgid "Cancelled"
 msgstr "Törölt"
+
+#: dog_grooming_app/templates/admin_bookings.html:71
+#: dog_grooming_app/templates/gallery.html:35
+#: dog_grooming_app/templates/services.html:51
+#: dog_grooming_app/templates/user_bookings.html:54
+msgid "first"
+msgstr "első"
+
+#: dog_grooming_app/templates/admin_bookings.html:87
+#: dog_grooming_app/templates/gallery.html:51
+#: dog_grooming_app/templates/services.html:67
+#: dog_grooming_app/templates/user_bookings.html:70
+msgid "last"
+msgstr "utolsó"
 
 #: dog_grooming_app/templates/base.html:16
 msgid "Emma Dog Grooming"
@@ -296,7 +310,7 @@ msgid "Gallery"
 msgstr "Galéria"
 
 #: dog_grooming_app/templates/base.html:54
-#: dog_grooming_app/templates/contact.html:10 dog_grooming_app/tests.py:741
+#: dog_grooming_app/templates/contact.html:12 dog_grooming_app/tests.py:741
 #: dog_grooming_app/tests.py:747
 msgid "Contact"
 msgstr "Kapcsolat"
@@ -335,110 +349,110 @@ msgid "Log out"
 msgstr "Kijelentkezek"
 
 #: dog_grooming_app/templates/base.html:74
-#: dog_grooming_app/templates/login.html:28
+#: dog_grooming_app/templates/login.html:30
 msgid "Log In"
 msgstr "Bejelentkezek"
 
 #: dog_grooming_app/templates/base.html:75
-#: dog_grooming_app/templates/login.html:29
-#: dog_grooming_app/templates/signup.html:28
+#: dog_grooming_app/templates/login.html:31
+#: dog_grooming_app/templates/signup.html:30
 msgid "Sign Up"
 msgstr "Regisztrálok"
 
-#: dog_grooming_app/templates/base.html:87
+#: dog_grooming_app/templates/base.html:83
 msgid "All Rights Reserved"
 msgstr "Minden Jog Fenntartva"
 
-#: dog_grooming_app/templates/booking.html:9
+#: dog_grooming_app/templates/booking.html:13
 msgid "Booking"
 msgstr "Foglalások"
 
-#: dog_grooming_app/templates/booking.html:15
-#: dog_grooming_app/templates/service.html:29
+#: dog_grooming_app/templates/booking.html:19
+#: dog_grooming_app/templates/service.html:31
 msgid "Dog size:"
 msgstr "Kutya mérete:"
 
-#: dog_grooming_app/templates/booking.html:17
-#: dog_grooming_app/templates/service.html:31
+#: dog_grooming_app/templates/booking.html:21
+#: dog_grooming_app/templates/service.html:33
 msgid "small"
 msgstr "kicsi"
 
-#: dog_grooming_app/templates/booking.html:18
-#: dog_grooming_app/templates/service.html:32
+#: dog_grooming_app/templates/booking.html:22
+#: dog_grooming_app/templates/service.html:34
 msgid "medium"
 msgstr "közepes"
 
-#: dog_grooming_app/templates/booking.html:19
-#: dog_grooming_app/templates/service.html:33
+#: dog_grooming_app/templates/booking.html:23
+#: dog_grooming_app/templates/service.html:35
 msgid "big"
 msgstr "nagy"
 
-#: dog_grooming_app/templates/booking.html:41
-#: dog_grooming_app/templates/service.html:54
+#: dog_grooming_app/templates/booking.html:45
+#: dog_grooming_app/templates/service.html:56
 msgid "Book"
 msgstr "Foglal"
 
-#: dog_grooming_app/templates/booking.html:42
-#: dog_grooming_app/templates/personal_data.html:29
-#: dog_grooming_app/templates/service.html:56
+#: dog_grooming_app/templates/booking.html:46
+#: dog_grooming_app/templates/personal_data.html:31
+#: dog_grooming_app/templates/service.html:58
 msgid "Back"
 msgstr "Vissza"
 
-#: dog_grooming_app/templates/contact.html:13
+#: dog_grooming_app/templates/contact.html:15
 msgid "Phone number:"
 msgstr "Telefonszám:"
 
-#: dog_grooming_app/templates/contact.html:21
+#: dog_grooming_app/templates/contact.html:23
 msgid "Address:"
 msgstr "Cím:"
 
-#: dog_grooming_app/templates/contact.html:25
+#: dog_grooming_app/templates/contact.html:27
 msgid "Opening hours:"
 msgstr "Nyitvatartás:"
 
-#: dog_grooming_app/templates/contact.html:29
+#: dog_grooming_app/templates/contact.html:31
 msgid "Monday:"
 msgstr "Hétfő:"
 
-#: dog_grooming_app/templates/contact.html:34
-#: dog_grooming_app/templates/contact.html:44
-#: dog_grooming_app/templates/contact.html:54
-#: dog_grooming_app/templates/contact.html:64
-#: dog_grooming_app/templates/contact.html:74
-#: dog_grooming_app/templates/contact.html:84
-#: dog_grooming_app/templates/contact.html:94
+#: dog_grooming_app/templates/contact.html:36
+#: dog_grooming_app/templates/contact.html:46
+#: dog_grooming_app/templates/contact.html:56
+#: dog_grooming_app/templates/contact.html:66
+#: dog_grooming_app/templates/contact.html:76
+#: dog_grooming_app/templates/contact.html:86
+#: dog_grooming_app/templates/contact.html:96
 msgid "closed"
 msgstr "zárva"
 
-#: dog_grooming_app/templates/contact.html:39
+#: dog_grooming_app/templates/contact.html:41
 msgid "Tuesday:"
 msgstr "Kedd:"
 
-#: dog_grooming_app/templates/contact.html:49
+#: dog_grooming_app/templates/contact.html:51
 msgid "Wednesday:"
 msgstr "Szerda:"
 
-#: dog_grooming_app/templates/contact.html:59
+#: dog_grooming_app/templates/contact.html:61
 msgid "Thursday:"
 msgstr "Csütörtök:"
 
-#: dog_grooming_app/templates/contact.html:69
+#: dog_grooming_app/templates/contact.html:71
 msgid "Friday:"
 msgstr "Péntek:"
 
-#: dog_grooming_app/templates/contact.html:79
+#: dog_grooming_app/templates/contact.html:81
 msgid "Saturday:"
 msgstr "Szombat:"
 
-#: dog_grooming_app/templates/contact.html:89
+#: dog_grooming_app/templates/contact.html:91
 msgid "Sunday:"
 msgstr "Vasárnap:"
 
-#: dog_grooming_app/templates/contact.html:105
+#: dog_grooming_app/templates/contact.html:107
 msgid "Call Me"
 msgstr "Hívj Vissza"
 
-#: dog_grooming_app/templates/contact.html:108
+#: dog_grooming_app/templates/contact.html:110
 msgid "Log in to request callback!"
 msgstr "Jelentkezz be visszahívás kéréséhez!"
 
@@ -552,19 +566,19 @@ msgstr ""
 "Üdvözlettel,<br>\n"
 "Emma Kutyakozmetika Szalon\n"
 
-#: dog_grooming_app/templates/login.html:11
+#: dog_grooming_app/templates/login.html:13
 msgid "Log In "
 msgstr "Bejelentkezés"
 
-#: dog_grooming_app/templates/personal_data.html:11
+#: dog_grooming_app/templates/personal_data.html:13
 msgid "Personal Data"
 msgstr "Személyes Adatok"
 
-#: dog_grooming_app/templates/personal_data.html:28
+#: dog_grooming_app/templates/personal_data.html:30
 msgid "Update"
 msgstr "Frissít"
 
-#: dog_grooming_app/templates/service.html:48
+#: dog_grooming_app/templates/service.html:50
 #, python-format
 msgid ""
 "\n"
@@ -575,15 +589,15 @@ msgstr ""
 "                Max időtartam: %(max_duration)s perc\n"
 "            "
 
-#: dog_grooming_app/templates/service.html:59
+#: dog_grooming_app/templates/service.html:61
 msgid "Log in to book!"
 msgstr "Jelentkezz be a foglaláshoz!"
 
-#: dog_grooming_app/templates/signup.html:11
+#: dog_grooming_app/templates/signup.html:13
 msgid "Sign Up "
 msgstr "Regisztráció"
 
-#: dog_grooming_app/templates/user_bookings.html:40
+#: dog_grooming_app/templates/user_bookings.html:42
 msgid "You have no bookings."
 msgstr "Nincs foglalásod."
 
@@ -595,7 +609,7 @@ msgstr "Zárva"
 msgid "No available slots"
 msgstr "Nincs elérhető időpont"
 
-#: dog_grooming_app/views.py:47
+#: dog_grooming_app/views.py:49
 msgid ""
 "Your account has been created successfully, please check your emails for the "
 "activation link to complete your registration."
@@ -603,25 +617,25 @@ msgstr ""
 "A fiókodat sikeresen létrehoztuk, kérlek fejezd be a regisztrációt az "
 "emailben küldött aktivációs linkre kattintással."
 
-#: dog_grooming_app/views.py:66
+#: dog_grooming_app/views.py:68
 msgid "Your account has been activated successfully, you can log in now."
 msgstr "A fiókodat sikeresen aktiváltuk, most már be tudsz jelentkezni."
 
-#: dog_grooming_app/views.py:68
+#: dog_grooming_app/views.py:70
 msgid ""
 "Activation link is invalid or there was a problem activating your account."
 msgstr ""
 "Az aktivációs link nem érvényes vagy hiba történt a fiókod aktiválása során."
 
-#: dog_grooming_app/views.py:91
+#: dog_grooming_app/views.py:93
 msgid "The user is not active!"
 msgstr "A felhasználó nem aktív!"
 
-#: dog_grooming_app/views.py:93
+#: dog_grooming_app/views.py:95
 msgid "Invalid username or password!"
 msgstr "Helytelen felhasználónév vagy jelszó!"
 
-#: dog_grooming_app/views.py:127
+#: dog_grooming_app/views.py:129
 msgid ""
 "Your data has been updated successfully and a confirmation email has been "
 "sent to confirm your new email address."
@@ -629,23 +643,23 @@ msgstr ""
 "Az adataidat sikeresen frissítettük és küldtünk egy emailt, hogy meg tudd "
 "erősíteni az új email címedet."
 
-#: dog_grooming_app/views.py:131
+#: dog_grooming_app/views.py:133
 msgid "Your data has been updated successfully."
 msgstr "Az adataidat sikeresen frissítettük."
 
-#: dog_grooming_app/views.py:159
+#: dog_grooming_app/views.py:161
 msgid "The callback request has been sent to the owner."
 msgstr "Visszahívási kérelmedet elküldtük a szalonnak."
 
-#: dog_grooming_app/views.py:236
+#: dog_grooming_app/views.py:277
 msgid "The image has been uploaded successfully."
 msgstr "A képet sikeresen feltöltötted."
 
-#: dog_grooming_app/views.py:242
+#: dog_grooming_app/views.py:283
 msgid "The image has been deleted successfully."
 msgstr "A képet sikeresen törörted."
 
-#: dog_grooming_app/views.py:278
+#: dog_grooming_app/views.py:319
 msgid "Your booking has been successful."
 msgstr "Foglalásod sikeres volt."
 
