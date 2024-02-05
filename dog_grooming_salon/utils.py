@@ -5,6 +5,8 @@ from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Email, To, Subject, HtmlContent, Mail, SendGridException
 from django.conf import settings
 
+from .logger import logger
+
 
 CONFIG_FILE = os.path.join(Path(__file__).resolve().parent.parent, 'config.yml')
 
@@ -26,6 +28,8 @@ def load_config():
 class DogGroomingEmail:
     """
     The DogGroomingEmail objects are emails used by the project, and they have a public send method.
+    To be used instead of the default Django solution.
+    # TODO - whether to use Django's built in email
     """
 
     def __init__(self, to, subject, message):
@@ -55,5 +59,5 @@ class DogGroomingEmail:
                 return response
             return None
         except SendGridException:
-            # TODO proper logging
+            logger.error('The email with subject "{}" could not be sent to "{}"'.format(self.mail.subject, self.mail.to))
             return None

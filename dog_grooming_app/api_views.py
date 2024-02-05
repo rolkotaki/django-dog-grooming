@@ -21,6 +21,7 @@ from .serializers import ContactSerializer, ServiceSerializer, ServiceUpdateDele
     BookingSerializer, CustomUserSerializer
 from .models import Contact, Service, Booking, CustomUser
 from .utils import BookingManager
+from dog_grooming_salon.logger import logger
 
 
 class ContactCreate(CreateAPIView):
@@ -159,6 +160,7 @@ class BookingCreate(CreateAPIView):
 class CancelBooking(APIView):
     """
     API view class to cancel a booking.
+    # TODO: only the user related to the booking can cancel it
     """
     authentication_classes = [SessionAuthentication, BasicAuthentication]
 
@@ -166,6 +168,7 @@ class CancelBooking(APIView):
         try:
             booking_id = int(self.kwargs.get('booking_id'))
         except ValueError:
+            logger.warning('Incorrect booking id was provided for cancellation: {}'.format(self.kwargs.get('booking_id')))
             return Response({'message': _('Incorrect booking id')}, status=status.HTTP_400_BAD_REQUEST)
         by_user = True if request.query_params.get('by_user', 'true').lower() == 'true' else False
         try:
@@ -173,6 +176,7 @@ class CancelBooking(APIView):
                 return redirect(reverse('user_bookings' if by_user else 'admin_bookings'))
             message = _('An error happened during the cancellation of the booking %(booking_id)d') % {'booking_id': booking_id}
         except Booking.DoesNotExist:
+            logger.warning('Non-existing booking id was provided for cancellation: {}'.format(booking_id))
             message = _('Booking with booking ID %(booking_id)d does not exist') % {'booking_id': booking_id}
         return Response({'message': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -187,6 +191,8 @@ class ListAvailableBookingSlots(APIView):
         day = request.query_params.get('day', None)
         service_id = request.query_params.get('service_id', None)
         if not day or not service_id:
+            logger.warning('Missing day or service id was provided for available booking slots: '
+                           '{}; {}'.format(day, service_id))
             return Response({'message': _('Incorrect day or service_id')}, status=status.HTTP_400_BAD_REQUEST)
         booking_slots = BookingManager.get_available_booking_slots(day=day, service_id=service_id)
         response_data = {
@@ -275,12 +281,15 @@ class CancelUser(APIView):
         try:
             user_id = int(self.kwargs.get('user_id'))
         except ValueError:
+            logger.warning('Incorrect user id was provided for cancellation: {}'.format(self.kwargs.get('user_id')))
             return Response({'message': _('Incorrect user id')}, status=status.HTTP_400_BAD_REQUEST)
         try:
             if CustomUser.objects.get(id=user_id).cancel_user():
                 messages.success(request, _("The user has been cancelled successfully."))
                 return redirect(reverse('admin_api'))
+            logger.error('An error happened during the cancellation of the user {}'.format(user_id))
             message = _('An error happened during the cancellation of the user %(user_id)d') % {'user_id': user_id}
         except CustomUser.DoesNotExist:
+            logger.warning('Non-existing user id was provided for cancellation: {}'.format(user_id))
             message = _('User with user ID %(user_id)d does not exist') % {'user_id': user_id}
         return Response({'message': message}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

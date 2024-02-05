@@ -16,6 +16,7 @@ from .constants import PHONE_NUMBER_VALIDATOR, BREAK, BOOKING_CANCELLATION_EMAIL
     CALLBACK_EMAIL_SUBJECT
 from dog_grooming_salon.utils import DogGroomingEmail
 from .tokens import account_activation_token
+from dog_grooming_salon.logger import logger
 
 
 class CustomUser(AbstractUser):
@@ -39,6 +40,7 @@ class CustomUser(AbstractUser):
             threading.Thread(target=dg_email.send).start()
             return True
         except Error:
+            logger.error('An error happened during the cancellation of the user {}'.format(self.pk, self.username))
             return False
 
     def send_activation_link(self, domain: str, protocol: str):
@@ -227,4 +229,5 @@ class Booking(models.Model):
                 threading.Thread(target=dg_email.send).start()
             return True
         except Error:
+            logger.error('An error happened during the cancellation of the booking {}'.format(self.id))
             return False

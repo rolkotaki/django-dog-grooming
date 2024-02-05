@@ -14,12 +14,14 @@ from pathlib import Path
 import os
 import sys
 from django.utils.translation import gettext_lazy as _
-
-from .utils import load_config
-
+from django.utils.log import AdminEmailHandler
+import logging.config
 
 # Whether the tests are being run
 TEST_MODE = len(sys.argv) > 1 and sys.argv[1] == 'test'
+
+from .utils import load_config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -173,3 +175,55 @@ LANGUAGES = (
 
 MEDIA_ROOT = os.path.abspath(os.path.join(BASE_DIR, 'dog_grooming_app', 'media'))
 MEDIA_URL = '/media/'
+
+
+# logging
+
+LOGGING_CONFIG = None
+email_config = load_config().get('dog_grooming_email', {})
+
+SENDGRID_API_KEY = os.environ.get('SENDGRID_API_KEY', email_config.get('sendgrid_api_key'))
+EMAIL_HOST = 'smtp.sendgrid.net'
+EMAIL_HOST_USER = 'apikey'  # this is exactly the value 'apikey'
+EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_SUBJECT_PREFIX = 'Emma Dog Grooming '
+DEFAULT_FROM_EMAIL = email_config.get('sender')
+ADMINS = [(name, email) for name, email in email_config.get('admins').items()]
+SERVER_EMAIL = email_config.get('sender')
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "generic": {
+            "format": "{asctime} {levelname} {module} {filename} {lineno} {message}",
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "logs/general.log",
+            "formatter": "generic",
+        },
+        "mail_admins": {
+            "level": "WARNING",
+            "class": "django.utils.log.AdminEmailHandler",
+            "include_html": True,
+            "formatter": "generic",
+        },
+    },
+    "loggers": {
+        "dog_grooming_logger": {
+            "handlers": ["file", "mail_admins"],
+            "level": "INFO",
+            "propagate": True,
+        },
+    },
+}
+
+logging.config.dictConfig(LOGGING)

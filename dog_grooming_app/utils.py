@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from .models import Booking, Contact, Service
 from .constants import BOOKING_SLOT_SEARCH_TIME_INTERVAL
+from dog_grooming_salon.logger import logger
 
 
 class BookingManager:
@@ -94,6 +95,7 @@ class GalleryManager:
                 for chunk in image.chunks():
                     image_file.write(chunk)
         except FileNotFoundError:
+            logger.error('Image to be uploaded not found: {}'.format(image.name))
             return False
         return True
 

@@ -10,3 +10,4 @@ docker/postgres_data
 .coverage
 htmlcov
 coverage.xml
+logs/*.log

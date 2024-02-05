@@ -1933,6 +1933,8 @@ class ModelsTestCase(TestCase):
         with patch.object(CustomUser, '__init__', return_value=None):
             with patch.object(CustomUser, 'save', side_effect=Error):
                 cu = CustomUser()
+                cu.pk = 1
+                cu.username = 'username'
                 return_value = cu.cancel_user()
         self.assertFalse(return_value)
 
@@ -1941,6 +1943,7 @@ class ModelsTestCase(TestCase):
         with patch.object(Booking, '__init__', return_value=None):
             with patch.object(Booking, 'save', side_effect=Error):
                 booking = Booking()
+                booking.id = 1
                 return_value = booking.cancel_booking()
         self.assertFalse(return_value)
 

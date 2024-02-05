@@ -19,6 +19,7 @@ from .models import Contact, Service, CustomUser, Booking
 from .utils import GalleryManager, BookingManager
 from .tokens import account_activation_token
 from .constants import PAGINATION_PAGES, SERVICES_PER_PAGE, BOOKINGS_PER_PAGE, GALLERY_IMAGES_PER_PAGE
+from dog_grooming_salon.logger import logger
 
 
 class HomePage(TemplateView):
@@ -45,7 +46,7 @@ def sign_up(request):
             # sending the email to confirm the registration
             user.send_activation_link(get_current_site(request).domain,
                                       'https' if request.is_secure() else 'http')
-
+            logger.info('New user signed up: {}, {}'.format(user.pk, user.username))
             messages.success(request, _('Your account has been created successfully, please check your emails '
                                         'for the activation link to complete your registration.'))
             return render(request, "signup.html", {'form': form})
@@ -60,6 +61,7 @@ def activate_account(request, uidb64, token):
         uid = force_str(urlsafe_base64_decode(uidb64))
         user = CustomUser.objects.get(pk=uid)
     except (TypeError, ValueError, OverflowError, CustomUser.DoesNotExist):
+        logger.warning('Unsuccessful token validation: uidb64 {}; token {}'.format(uidb64, token))
         user = None
 
     if user and account_activation_token.check_token(user, token):
@@ -67,6 +69,8 @@ def activate_account(request, uidb64, token):
         user.save()
         messages.success(request, _('Your account has been activated successfully, you can log in now.'))
     else:
+        if user:
+            logger.warning('Unsuccessful user activation: user {}'.format(user.pk))
         messages.error(request, _('Activation link is invalid or there was a problem activating your account.'))
     return redirect('login')
 
@@ -149,6 +153,7 @@ class ContactPage(TemplateView):
         try:
             context["contact_details"] = Contact.objects.get(id='x')
         except Contact.DoesNotExist:
+            logger.error('Contact information does not exist')
             context["contact_details"] = None
         return context
 
