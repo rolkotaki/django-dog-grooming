@@ -190,9 +190,10 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_SUBJECT_PREFIX = 'Emma Dog Grooming '
-DEFAULT_FROM_EMAIL = email_config.get('sender')
-ADMINS = [(name, email) for name, email in email_config.get('admins').items()]
-SERVER_EMAIL = email_config.get('sender')
+if email_config.get('admins') and email_config.get('sender'):
+    DEFAULT_FROM_EMAIL = email_config.get('sender')
+    ADMINS = [(name, email) for name, email in email_config.get('admins').items()]
+    SERVER_EMAIL = email_config.get('sender')
 
 LOGGING = {
     "version": 1,
