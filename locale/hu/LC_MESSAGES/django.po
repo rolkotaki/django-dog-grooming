@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-28 21:57+0100\n"
+"POT-Creation-Date: 2024-02-09 23:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,61 +18,61 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: dog_grooming_app/api_views.py:41
+#: dog_grooming_app/api_views.py:42
 msgid "The contact information already exist, please update the existing one!"
 msgstr "Az elérhetőségi adatok már léteznek, kérlek frissítsd azokat!"
 
-#: dog_grooming_app/api_views.py:76 dog_grooming_app/api_views.py:141
-#: dog_grooming_app/models.py:152
+#: dog_grooming_app/api_views.py:77 dog_grooming_app/api_views.py:142
+#: dog_grooming_app/models.py:154
 msgid "Price must be greater than zero!"
 msgstr "Az ár nagyobb kell hogy legyen nullánál!"
 
-#: dog_grooming_app/api_views.py:78 dog_grooming_app/api_views.py:143
-#: dog_grooming_app/models.py:154
+#: dog_grooming_app/api_views.py:79 dog_grooming_app/api_views.py:144
+#: dog_grooming_app/models.py:156
 msgid "Default price must not be empty!"
 msgstr "Az alapértelmezett ár nem lehet üres!"
 
-#: dog_grooming_app/api_views.py:80 dog_grooming_app/api_views.py:145
-#: dog_grooming_app/models.py:156
+#: dog_grooming_app/api_views.py:81 dog_grooming_app/api_views.py:146
+#: dog_grooming_app/models.py:158
 msgid "A valid number is required!"
 msgstr "Adj meg egy érvényes számot!"
 
-#: dog_grooming_app/api_views.py:169
+#: dog_grooming_app/api_views.py:172
 msgid "Incorrect booking id"
 msgstr "Helytelen foglalási azonosító"
 
-#: dog_grooming_app/api_views.py:174
+#: dog_grooming_app/api_views.py:177
 #, python-format
 msgid "An error happened during the cancellation of the booking %(booking_id)d"
 msgstr "Hiba történt a foglalás %(booking_id)d törlése közben"
 
-#: dog_grooming_app/api_views.py:176
+#: dog_grooming_app/api_views.py:180
 #, python-format
 msgid "Booking with booking ID %(booking_id)d does not exist"
 msgstr "A %(booking_id)d foglalási azonosítóval nem létezik foglalás"
 
-#: dog_grooming_app/api_views.py:190
+#: dog_grooming_app/api_views.py:196
 msgid "Incorrect day or service_id"
 msgstr "Helytelen nap vagy szolgáltatási azonosító"
 
-#: dog_grooming_app/api_views.py:193
+#: dog_grooming_app/api_views.py:199
 msgid "These are the available booking slots"
 msgstr "Ezek az elérhető foglalási időpontok"
 
-#: dog_grooming_app/api_views.py:278
+#: dog_grooming_app/api_views.py:285
 msgid "Incorrect user id"
 msgstr "Helytelen felhasználói azonosító"
 
-#: dog_grooming_app/api_views.py:281
+#: dog_grooming_app/api_views.py:288
 msgid "The user has been cancelled successfully."
 msgstr "A felhasználó deaktiválása sikeres volt"
 
-#: dog_grooming_app/api_views.py:283
+#: dog_grooming_app/api_views.py:291
 #, python-format
 msgid "An error happened during the cancellation of the user %(user_id)d"
 msgstr "Hiba történt a felhasználó %(user_id)d deaktiválása közben"
 
-#: dog_grooming_app/api_views.py:285
+#: dog_grooming_app/api_views.py:294
 #, python-format
 msgid "User with user ID %(user_id)d does not exist"
 msgstr "A %(user_id)d azonosítóval nem létezik felhasználó"
@@ -118,7 +118,7 @@ msgid "Phone number"
 msgstr "Telefonszám"
 
 #: dog_grooming_app/forms.py:29 dog_grooming_app/forms.py:46
-#: dog_grooming_app/models.py:27
+#: dog_grooming_app/models.py:28
 msgid "Enter a valid phone number."
 msgstr "Adjon meg egy érvényes telefonszámot!"
 
@@ -240,18 +240,22 @@ msgid "Choose an image!"
 msgstr "Válassz egy képet!"
 
 #: dog_grooming_app/templates/admin_bookings.html:14
+msgid "name, username or id"
+msgstr "név vagy azonosító"
+
+#: dog_grooming_app/templates/admin_bookings.html:15
 msgid "Cancelled:"
 msgstr "Törölt:"
 
-#: dog_grooming_app/templates/admin_bookings.html:16
+#: dog_grooming_app/templates/admin_bookings.html:17
 msgid "Search"
 msgstr "Keres"
 
-#: dog_grooming_app/templates/admin_bookings.html:17
+#: dog_grooming_app/templates/admin_bookings.html:18
 msgid "All"
 msgstr "Összes"
 
-#: dog_grooming_app/templates/admin_bookings.html:42
+#: dog_grooming_app/templates/admin_bookings.html:43
 #: dog_grooming_app/templates/user_bookings.html:31
 #, python-format
 msgid ""
@@ -263,23 +267,23 @@ msgstr ""
 "                Időtartam: %(max_duration)s perc\n"
 "            "
 
-#: dog_grooming_app/templates/admin_bookings.html:55
+#: dog_grooming_app/templates/admin_bookings.html:57
 #: dog_grooming_app/templates/user_bookings.html:37
 msgid "Cancel"
 msgstr "Töröl"
 
-#: dog_grooming_app/templates/admin_bookings.html:57
+#: dog_grooming_app/templates/admin_bookings.html:60
 msgid "Cancelled"
 msgstr "Törölt"
 
-#: dog_grooming_app/templates/admin_bookings.html:71
+#: dog_grooming_app/templates/admin_bookings.html:74
 #: dog_grooming_app/templates/gallery.html:35
 #: dog_grooming_app/templates/services.html:51
 #: dog_grooming_app/templates/user_bookings.html:54
 msgid "first"
 msgstr "első"
 
-#: dog_grooming_app/templates/admin_bookings.html:87
+#: dog_grooming_app/templates/admin_bookings.html:90
 #: dog_grooming_app/templates/gallery.html:51
 #: dog_grooming_app/templates/services.html:67
 #: dog_grooming_app/templates/user_bookings.html:70
@@ -294,24 +298,24 @@ msgstr "Emma Kutyakozmetika"
 msgid "Emma's Dog Grooming Salon"
 msgstr "Emma Kutyakozmetika Szalon"
 
-#: dog_grooming_app/templates/base.html:51 dog_grooming_app/tests.py:741
-#: dog_grooming_app/tests.py:747
+#: dog_grooming_app/templates/base.html:51 dog_grooming_app/tests.py:743
+#: dog_grooming_app/tests.py:749
 msgid "Home"
 msgstr "Kezdőlap"
 
-#: dog_grooming_app/templates/base.html:52 dog_grooming_app/tests.py:741
-#: dog_grooming_app/tests.py:747
+#: dog_grooming_app/templates/base.html:52 dog_grooming_app/tests.py:743
+#: dog_grooming_app/tests.py:749
 msgid "Services"
 msgstr "Szolgáltatások"
 
-#: dog_grooming_app/templates/base.html:53 dog_grooming_app/tests.py:741
-#: dog_grooming_app/tests.py:747
+#: dog_grooming_app/templates/base.html:53 dog_grooming_app/tests.py:743
+#: dog_grooming_app/tests.py:749
 msgid "Gallery"
 msgstr "Galéria"
 
 #: dog_grooming_app/templates/base.html:54
-#: dog_grooming_app/templates/contact.html:12 dog_grooming_app/tests.py:741
-#: dog_grooming_app/tests.py:747
+#: dog_grooming_app/templates/contact.html:12 dog_grooming_app/tests.py:743
+#: dog_grooming_app/tests.py:749
 msgid "Contact"
 msgstr "Kapcsolat"
 
@@ -601,15 +605,15 @@ msgstr "Regisztráció"
 msgid "You have no bookings."
 msgstr "Nincs foglalásod."
 
-#: dog_grooming_app/utils.py:46
+#: dog_grooming_app/utils.py:47
 msgid "Closed"
 msgstr "Zárva"
 
-#: dog_grooming_app/utils.py:77
+#: dog_grooming_app/utils.py:78
 msgid "No available slots"
 msgstr "Nincs elérhető időpont"
 
-#: dog_grooming_app/views.py:49
+#: dog_grooming_app/views.py:51
 msgid ""
 "Your account has been created successfully, please check your emails for the "
 "activation link to complete your registration."
@@ -617,25 +621,25 @@ msgstr ""
 "A fiókodat sikeresen létrehoztuk, kérlek fejezd be a regisztrációt az "
 "emailben küldött aktivációs linkre kattintással."
 
-#: dog_grooming_app/views.py:68
+#: dog_grooming_app/views.py:71
 msgid "Your account has been activated successfully, you can log in now."
 msgstr "A fiókodat sikeresen aktiváltuk, most már be tudsz jelentkezni."
 
-#: dog_grooming_app/views.py:70
+#: dog_grooming_app/views.py:75
 msgid ""
 "Activation link is invalid or there was a problem activating your account."
 msgstr ""
 "Az aktivációs link nem érvényes vagy hiba történt a fiókod aktiválása során."
 
-#: dog_grooming_app/views.py:93
+#: dog_grooming_app/views.py:98
 msgid "The user is not active!"
 msgstr "A felhasználó nem aktív!"
 
-#: dog_grooming_app/views.py:95
+#: dog_grooming_app/views.py:100
 msgid "Invalid username or password!"
 msgstr "Helytelen felhasználónév vagy jelszó!"
 
-#: dog_grooming_app/views.py:129
+#: dog_grooming_app/views.py:134
 msgid ""
 "Your data has been updated successfully and a confirmation email has been "
 "sent to confirm your new email address."
@@ -643,30 +647,30 @@ msgstr ""
 "Az adataidat sikeresen frissítettük és küldtünk egy emailt, hogy meg tudd "
 "erősíteni az új email címedet."
 
-#: dog_grooming_app/views.py:133
+#: dog_grooming_app/views.py:138
 msgid "Your data has been updated successfully."
 msgstr "Az adataidat sikeresen frissítettük."
 
-#: dog_grooming_app/views.py:161
+#: dog_grooming_app/views.py:167
 msgid "The callback request has been sent to the owner."
 msgstr "Visszahívási kérelmedet elküldtük a szalonnak."
 
-#: dog_grooming_app/views.py:277
+#: dog_grooming_app/views.py:281
 msgid "The image has been uploaded successfully."
 msgstr "A képet sikeresen feltöltötted."
 
-#: dog_grooming_app/views.py:283
+#: dog_grooming_app/views.py:287
 msgid "The image has been deleted successfully."
 msgstr "A képet sikeresen törörted."
 
-#: dog_grooming_app/views.py:319
+#: dog_grooming_app/views.py:323
 msgid "Your booking has been successful."
 msgstr "Foglalásod sikeres volt."
 
-#: dog_grooming_salon/settings.py:170
+#: dog_grooming_salon/settings.py:172
 msgid "English"
 msgstr "Angol"
 
-#: dog_grooming_salon/settings.py:171
+#: dog_grooming_salon/settings.py:173
 msgid "Hungarian"
 msgstr "Magyar"
