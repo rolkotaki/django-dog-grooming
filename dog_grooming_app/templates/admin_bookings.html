@@ -11,6 +11,7 @@
     <form method="POST" novalidate>
         {% csrf_token %}
         <input name="booking_date" id="booking_date" type="date" value="{{ day }}" />
+        <input name="user" id="user" type="text" placeholder="{% trans 'name, username or id' %}" value="{{ user_filter }}" />
         <label for="cancelled">{% trans 'Cancelled:' %}</label>
         <input name="cancelled" id="cancelled" type="checkbox" value="cancelled" {% if cancelled %} checked {% endif %}/>
         <input name="submit_search" type="submit" value="{% trans 'Search' %}"/>
@@ -52,7 +53,9 @@
         {% endif %}
         <p>{{ booking.user.username}}</p>
         {% if not booking.cancelled %}
+            {% if booking.date > date or booking.date == date and booking.time >= time  %}
             <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}?by_user=false">{% trans 'Cancel' %}</a>
+            {% endif %}
         {% else %}
             <p style="color:red;">{% trans 'Cancelled' %}</p>
         {% endif %}
@@ -68,7 +71,7 @@
 <div class="pagination">
     <span class="page_links">
         {% if page.has_previous %}
-            <a class="page_link" href="?page=1">&laquo; {% trans 'first' %}</a>
+            <a class="page_link" href="?page=1{% if day %}&day={{ day }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if cancelled %}&cancelled=True{% endif %}">&laquo; {% trans 'first' %}</a>
             <span>&middot;</span>
         {% endif %}
 
@@ -76,7 +79,7 @@
             {% if page.number == i %}
                 <span class="current_page">{{ page.number }}</span>
             {% else %}
-                <a class="page_link" href="?page={{ i }}">{{ i }}</a>
+                <a class="page_link" href="?page={{ i }}{% if day %}&day={{ day }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if cancelled %}&cancelled=True{% endif %}">{{ i }}</a>
             {% endif %}
             {% if page.paginator.num_pages != i or page.paginator.num_pages != page.number %}
                 <span>&middot;</span>
@@ -84,7 +87,7 @@
         {% endfor %}
 
         {% if page.has_next %}
-            <a class="page_link" href="?page={{ page.paginator.num_pages }}">{% trans 'last' %} &raquo;</a>
+            <a class="page_link" href="?page={{ page.paginator.num_pages }}{% if day %}&day={{ day }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if cancelled %}&cancelled=True{% endif %}">{% trans 'last' %} &raquo;</a>
         {% endif %}
     </span>
 </div>

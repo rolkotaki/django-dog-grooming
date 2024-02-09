@@ -1,5 +1,6 @@
 import datetime
 from django.contrib.auth.views import PasswordChangeView
+from django.http import QueryDict
 from django.views.generic import TemplateView
 from django.contrib.auth import login, authenticate
 from django.shortcuts import redirect, render
@@ -377,21 +378,38 @@ class AdminBookingsPage(LoginRequiredMixin, TemplateView):
             return self.handle_no_permission()
         return super().dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, day=None, cancelled=False, **kwargs):
+    def get_context_data(self, day=None, user=None, cancelled=False, **kwargs):
         """
         Overriding the get_context_data method to add the list of active Bookings.
         """
         context = super().get_context_data(**kwargs)
-        if not day:
-            booking_filter = (Q(cancelled=False) | Q(cancelled=cancelled)) & \
-                              (Q(date__gt=datetime.date.today()) |
-                               (Q(date=datetime.date.today()) & Q(time__gt=datetime.datetime.now().time())))
-        else:
-            booking_filter = (Q(cancelled=False) | Q(cancelled=cancelled)) & Q(date=day)
+        context['date'] = datetime.date.today()
+        context['time'] = datetime.datetime.now().time()
         context['day'] = '' if not day else day
         context['cancelled'] = True if cancelled else False
-        bookings = Booking.objects.filter(booking_filter).order_by('date', 'time')
+        context['user_filter'] = '' if not user else user
 
+        # creating the filters with cancelled and day
+        if not day:
+            booking_filter = ((Q(cancelled=False) | Q(cancelled=cancelled)) &
+                              (Q(date__gt=context['date']) |
+                               (Q(date=context['date']) & Q(time__gte=context['time']))))
+        else:
+            booking_filter = ((Q(cancelled=False) | Q(cancelled=cancelled)) & Q(date__gte=day))
+
+        # creating the user filter
+        user_filter = None
+        if user:
+            user_filter = Q(user__username__icontains=user) | Q(user__first_name__icontains=user) | \
+                          Q(user__last_name__icontains=user)
+            if user.isdigit():
+                user_filter = user_filter | Q(user__pk=int(user))
+
+        # applying the user filter if any
+        if user_filter:
+                booking_filter = booking_filter & user_filter
+
+        bookings = Booking.objects.filter(booking_filter).order_by('date', 'time')
         page_number = int(self.request.GET.get('page', 1))
         paginator = Paginator(bookings, BOOKINGS_PER_PAGE)
         page = paginator.get_page(page_number)
@@ -411,14 +429,38 @@ class AdminBookingsPage(LoginRequiredMixin, TemplateView):
 
         return context
 
+    def get(self, request, *args, **kwargs):
+        """
+        Overriding the GET method to handle the filtering and searching of the Bookings.
+        """
+        cancelled = True if request.GET.get('cancelled', False) else False
+        day = request.GET.get('day') if 'day' in request.GET else None
+        user = request.GET.get('user') if 'user' in request.GET else None
+        context = self.get_context_data(day=day, user=user, cancelled=cancelled, **kwargs)
+        return self.render_to_response(context)
+
     def post(self, request, *args, **kwargs):
         """
-        Post method to handle the filtering and searching of the Bookings.
+        POST method to handle the filtering and searching of the Bookings.
         """
         cancelled = True if request.POST.get('cancelled', False) else False
         day = None  # if 'submit_all' in request.POST
-        # bookings for a specific day
+        user = None  # if 'submit_all' in request.POST
+        # bookings from a specific day
         if 'submit_search' in request.POST:
             day = request.POST.get('booking_date', None)
-        context = self.get_context_data(day=day, cancelled=cancelled, **kwargs)
-        return self.render_to_response(context)
+            user = request.POST.get('user', None)
+
+        # reconstructing the URL without the unnecessary query parameters
+        query_params = QueryDict(mutable=True)
+        if day:
+            query_params.update({'day': day})
+        if cancelled:
+            query_params.update({'cancelled': cancelled})
+        if user:
+            query_params.update({'user': user})
+        redirect_url = request.path
+        if len(query_params) > 0:
+            redirect_url += '?' + query_params.urlencode()
+
+        return redirect(redirect_url)

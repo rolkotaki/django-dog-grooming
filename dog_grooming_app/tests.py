@@ -1650,7 +1650,8 @@ class AdminBookingsViewTestCase(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = CustomUser.objects.create_user(username='user', password='test_password')
+        self.user = CustomUser.objects.create_user(username='user', password='test_password', first_name='first_name',
+                                                   last_name='last_name')
         self.admin_user = CustomUser.objects.create_superuser(username='admin', password='admin_password')
         self._create_contact()
         self.service = self._create_new_service()
@@ -1802,11 +1803,14 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<input name="cancelled" id="cancelled" type="checkbox" value="cancelled" (.*)/>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
+        pattern = r'<input name="user" id="user" type="text" (.*)/>'
+        match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
+        self.assertIsNotNone(match)
         self.assertContains(response, '<input name="submit_search" type="submit" value="Search"/>')
         self.assertContains(response, '<input name="submit_all" type="submit" value="All" />')
 
     def test_08_admin_booking_filter_on_cancelled_too(self):
-        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        """Tests that the filtering on cancelled bookings works well in the Admin Bookings view."""
         self.cancelled_booking = self._create_booking(cancelled=True)
         self._login()
         response = self.client.post(reverse('admin_bookings'), {'cancelled': 'cancelled'}, follow=True)
@@ -1820,7 +1824,7 @@ class AdminBookingsViewTestCase(TestCase):
         self.assertIsNotNone(match)
 
     def test_09_admin_booking_filter_on_active(self):
-        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        """Tests that the filtering on active bookings works well in the Admin Bookings view."""
         self.cancelled_booking = self._create_booking(cancelled=True)
         self._login()
         response = self.client.post(reverse('admin_bookings'), follow=True)
@@ -1834,7 +1838,7 @@ class AdminBookingsViewTestCase(TestCase):
         self.assertIsNotNone(match)
 
     def test_10_admin_booking_filter_on_date(self):
-        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        """Tests that the filtering on the date works well in the Admin Bookings view."""
         self.cancelled_booking = self._create_booking(cancelled=True)
         self._login()
         response = self.client.post(reverse('admin_bookings'), {'booking_date':
@@ -1845,17 +1849,17 @@ class AdminBookingsViewTestCase(TestCase):
                                                                 'submit_search': 'Search'},
                                     follow=True)
         self.assertContains(response, '<div class="admin_booking_box">')
-        # only the active booking should be available, based on the date
+        # both bookings should be available, as we display everything from the given day on
         html_content = response.content.decode('utf-8')
         pattern = r'<p style="color:red;">Cancelled</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
-        self.assertIsNone(match)
+        self.assertIsNotNone(match)
         pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
     def test_11_admin_booking_filter_on_date(self):
-        """Tests that the cancelled booking boxes are displayed as well in the Admin Bookings view."""
+        """Tests that the filtering on the date works well in the Admin Bookings view."""
         self.cancelled_booking = self._create_booking(cancelled=True)
         self._login()
         response = self.client.post(reverse('admin_bookings'), {'booking_date':
@@ -1875,13 +1879,95 @@ class AdminBookingsViewTestCase(TestCase):
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
 
-    def test_12_pagination_not_displayed(self):
+    def test_12_admin_booking_filter_on_user_id(self):
+        """Tests that the filtering on the user works well in the Admin Bookings view."""
+        self._login()
+        # should return the booking, by user ID
+        response = self.client.post(reverse('admin_bookings'), {'user': self.user.pk,
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        # should not return the booking
+        response = self.client.post(reverse('admin_bookings'), {'user': self.user.pk + 1,
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+
+        # should return the booking, by username
+        response = self.client.post(reverse('admin_bookings'), {'user': 'user',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        # should not return the booking
+        response = self.client.post(reverse('admin_bookings'), {'user': 'someone',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+
+        # should return the booking, by first name
+        response = self.client.post(reverse('admin_bookings'), {'user': 'first',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        # should not return the booking
+        response = self.client.post(reverse('admin_bookings'), {'user': 'noexist',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+
+        # should return the booking, by last name
+        response = self.client.post(reverse('admin_bookings'), {'user': 'last',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+        # should not return the booking
+        response = self.client.post(reverse('admin_bookings'), {'user': 'middlename',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+
+    def test_13_admin_booking_filter_on_everything(self):
+        """Tests that the filtering on bookings works well in the Admin Bookings view."""
+        self._login()
+        # should return the booking
+        response = self.client.post(reverse('admin_bookings'), {'booking_date':
+                                                                    datetime.date.strftime(datetime.date.today() +
+                                                                                           datetime.timedelta(days=1),
+                                                                                           '%Y-%m-%d'),
+                                                                'user': 'user',
+                                                                'cancelled': 'cancelled',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertContains(response, '<div class="admin_booking_box">')
+
+        # should not return the booking
+        response = self.client.post(reverse('admin_bookings'), {'booking_date':
+                                                                    datetime.date.strftime(datetime.date.today() +
+                                                                                           datetime.timedelta(days=2),
+                                                                                           '%Y-%m-%d'),
+                                                                'user': 'user',
+                                                                'cancelled': 'cancelled',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+
+        response = self.client.post(reverse('admin_bookings'), {'booking_date':
+                                                                    datetime.date.strftime(datetime.date.today() +
+                                                                                           datetime.timedelta(days=1),
+                                                                                           '%Y-%m-%d'),
+                                                                'user': 'noone',
+                                                                'cancelled': 'cancelled',
+                                                                'submit_search': 'Search'},
+                                    follow=True)
+        self.assertNotContains(response, '<div class="admin_booking_box">')
+
+    def test_14_pagination_not_displayed(self):
         """Tests that the pagination is not displayed when we have no more items than the maximum allowed on a page."""
         self._login()
         response = self.client.get(reverse('admin_bookings'))
         self.assertNotContains(response, '<div class="pagination">')
 
-    def test_13_pagination_is_displayed(self):
+    def test_15_pagination_is_displayed(self):
         """Tests that the pagination is displayed when we have more items than the maximum allowed on a page."""
         for i in range(BOOKINGS_PER_PAGE):
             self._create_booking()  # so that we have one more booking than the maximum allowed on a page
@@ -1891,7 +1977,7 @@ class AdminBookingsViewTestCase(TestCase):
         self.assertContains(response, '<a class="page_link" href="?page=2">last &raquo;</a>')
         self.assertNotContains(response, '<a class="page_link" href="?page=1">&laquo; first</a>')
 
-    def test_14_pagination_links_are_correct(self):
+    def test_16_pagination_links_are_correct(self):
         """Tests that the pagination links are all displayed correctly."""
         for i in range(BOOKINGS_PER_PAGE * PAGINATION_PAGES):
             self._create_booking()
