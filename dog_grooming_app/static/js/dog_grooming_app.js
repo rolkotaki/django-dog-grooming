@@ -209,3 +209,10 @@ function fetchAvailableBookingTimeSlots() {
         }
     });
 }
+
+/**
+ * Displays a confirmation pop-up before cancelling a booking.
+ */
+function confirmCancel(message) {
+    return confirm(message);
+}

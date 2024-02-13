@@ -14,6 +14,7 @@ from django.utils.http import urlsafe_base64_decode
 from django.utils.encoding import force_str
 from django.utils.translation import gettext_lazy as _
 from django.core.paginator import Paginator
+from django.shortcuts import get_object_or_404
 
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
@@ -247,7 +248,8 @@ class ServicePage(TemplateView):
         Overriding the get_context_data method to add the Service object.
         """
         context = super().get_context_data(**kwargs)
-        context["service"] = Service.objects.get(id=self.kwargs['service_id'])
+        # context["service"] = Service.objects.get(id=self.kwargs['service_id'])
+        context["service"] = get_object_or_404(Service, slug=self.kwargs['slug'])
         return context
 
 
@@ -261,17 +263,17 @@ class CustomPasswordChangeView(LoginRequiredMixin, PasswordChangeView):
 
 
 @staff_member_required()
-def admin_api_page(request):
+def admin_page(request):
     """
-    View method for the Admin API page.
+    View method for the Admin page.
     """
     services = Service.objects.order_by('id')
     active_services = Service.objects.filter(active=True).order_by('id')
     users = CustomUser.objects.filter(is_active=True).order_by('id')
     gallery_images = GalleryManager.get_gallery_image_list()
     if request.method == 'GET':
-        return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
-                                                  'users': users, 'gallery_images': gallery_images})
+        return render(request, "admin_page.html", {'services': services, 'active_services': active_services,
+                                                   'users': users, 'gallery_images': gallery_images})
     if request.method == 'POST':
         # uploading a new image to the gallery
         if 'image_upload_submit' in request.POST:
@@ -279,23 +281,24 @@ def admin_api_page(request):
             if image:
                 GalleryManager.upload_image_to_gallery(image)
                 messages.success(request, _("The image has been uploaded successfully."))
-                return redirect('admin_api')
+                return redirect('admin_page')
         # deleting an image from the gallery
         if 'image_delete_submit' in request.POST:
             image = request.POST.get('image_to_be_deleted')
             GalleryManager.delete_image_from_gallery(image)
             messages.success(request, _("The image has been deleted successfully."))
-            return redirect('admin_api')
-        return render(request, "admin_api.html", {'services': services, 'active_services': active_services,
-                                                  'users': users, 'gallery_images': gallery_images})
+            return redirect('admin_page')
+        return render(request, "admin_page.html", {'services': services, 'active_services': active_services,
+                                                   'users': users, 'gallery_images': gallery_images})
 
 
 @login_required(login_url='login')
-def booking(request, service_id):
+def booking(request, slug):
     """
     View method for the booking.
     """
-    service = Service.objects.get(id=service_id)
+    # service = Service.objects.get(id=service_id)
+    service = get_object_or_404(Service, slug=slug)
     available_booking_slots = BookingManager.get_available_booking_slots(datetime.date.today() + datetime.timedelta(days=1),
                                                                          service.id)
     if request.method == 'GET':
@@ -321,7 +324,7 @@ def booking(request, service_id):
             booking = Booking.objects.create(**booking_data)
             booking.save()
             messages.success(request, _("Your booking has been successful."))
-            return redirect('booking', service_id=service.id)
+            return redirect('booking', slug=service.slug)
         form = BookingForm(request.POST, available_booking_slots=available_booking_slots)
         return render(request, "booking.html", {'form': form, 'service': service})
 

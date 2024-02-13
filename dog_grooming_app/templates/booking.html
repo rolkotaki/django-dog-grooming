@@ -43,7 +43,7 @@
             {% endfor %}
             <div class="form_buttons">
                 <input class="a_button green_button" type="submit" value="{% trans 'Book' %}" />
-                <a class="a_button grey_button" href="{% url 'service' service_id=service.id %}">{% trans 'Back' %}</a>
+                <a class="a_button grey_button" href="{% url 'service' slug=service.slug %}">{% trans 'Back' %}</a>
             </div>
         </form>
 

@@ -13,7 +13,7 @@ The main feautres of the website are:
 * Booking of services
 * Booking management (different for users and staff)
 * Gallery
-* Admin APIs to:
+* Admin page to:
   * Create/update/delete services and contact information
   * Manage bookings
   * Manage the gallery
@@ -27,6 +27,8 @@ run it again.
 ```
 docker-compose up -d
 ```
+Open in the browser: [127.0.0.1:8000](http://127.0.0.1:8000/)
+
 Stop and remove all containers:
 ```
 docker-compose down
@@ -114,5 +116,12 @@ Compile the translations after providing them:
 ```
 django-admin compilemessages --ignore=env --ignore=docker
 ```
+
+## Next Steps
+
+* Have the About page done together with the owner
+* Final revision with the owner
+* Make website go live
+
 <br>
 Python version used for the development: Python 3.9.6

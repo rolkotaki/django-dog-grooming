@@ -8,6 +8,7 @@ from django.db.utils import Error
 from django.template.loader import render_to_string
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
+from django.utils.text import slugify
 from typing import Tuple
 import threading
 
@@ -143,6 +144,7 @@ class Service(models.Model):
     max_duration = models.SmallIntegerField(null=False)
     photo = models.ImageField(blank=False, null=False, upload_to='services')
     active = models.BooleanField(default=True)
+    slug = models.SlugField(unique=True, max_length=255, null=True, blank=True)
 
     def _validate_price(self, field_name, value):
         """
@@ -182,6 +184,8 @@ class Service(models.Model):
         self.clean()
         if self.photo.name is None or self.photo.name == '':
             self.photo = Service.objects.get(id=self.id).photo
+        if not self.slug:
+            self.slug = slugify(self.service_name_en)
         super().save(*args, **kwargs)
 
 

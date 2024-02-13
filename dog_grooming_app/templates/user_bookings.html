@@ -34,7 +34,7 @@
         </p>
         <p>{{ booking.date}} {{ booking.time }}</p>
         <p>{{ booking.service_price}} Ft</p>
-        <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}">{% trans 'Cancel' %}</a>
+        <a class="a_button red_button" onclick="return confirmCancel('{% trans 'Are you sure you want to cancel this booking?' %}');" href="{% url 'api_cancel_booking' booking_id=booking.id %}">{% trans 'Cancel' %}</a>
     </div>
 
     {% empty %}

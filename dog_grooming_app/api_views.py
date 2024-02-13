@@ -286,7 +286,7 @@ class CancelUser(APIView):
         try:
             if CustomUser.objects.get(id=user_id).cancel_user():
                 messages.success(request, _("The user has been cancelled successfully."))
-                return redirect(reverse('admin_api'))
+                return redirect(reverse('admin_page'))
             logger.error('An error happened during the cancellation of the user {}'.format(user_id))
             message = _('An error happened during the cancellation of the user %(user_id)d') % {'user_id': user_id}
         except CustomUser.DoesNotExist:

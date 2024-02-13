@@ -22,7 +22,7 @@ from django.utils.encoding import force_bytes
 import dog_grooming_app.constants
 from .models import CustomUser, Contact, Service, Booking
 from .api_views import CancelUser, CancelBooking, ListAvailableBookingSlots, ServiceRetrieveUpdateDestroy
-from .views import ContactPage, admin_api_page
+from .views import ContactPage, admin_page
 from .utils import GalleryManager, BookingManager
 from .tokens import account_activation_token
 from .constants import SERVICES_PER_PAGE, BOOKINGS_PER_PAGE, GALLERY_IMAGES_PER_PAGE, PAGINATION_PAGES
@@ -154,6 +154,7 @@ class ServiceAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.admin_user if admin else self.user)
         with open(self.photo_path, 'rb') as photo_data:
             self.service_attrs['photo'] = photo_data
+            self.service_attrs['service_name_en'] = 'Service name EN {}'.format(Service.objects.count())
             response = self.client.post(reverse('api_service_create'), self.service_attrs, format='multipart')
         if admin:
             try:
@@ -341,7 +342,7 @@ class BookingAPITestCase(APITestCase):
         self.client.force_authenticate(user=self.admin_user)
         photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
         service_attrs = {
-            'service_name_en': 'Service name EN',
+            'service_name_en': 'Service name EN {}'.format(Service.objects.count()),
             'service_name_hu': 'Service name HU',
             'price_default': 1000,
             'price_small': 750,
@@ -1086,7 +1087,7 @@ class ServiceViewTestCase(TestCase):
         with open(photo_path, 'rb') as photo_data:
             image = SimpleUploadedFile("image.jpg", photo_data.read(), content_type="image/jpeg")
         service_attrs = {
-            'service_name_en': 'Service name EN',
+            'service_name_en': 'Service name EN {}'.format(Service.objects.count()),
             'service_name_hu': 'Service name HU',
             'price_default': 1000,
             'price_small': 750,
@@ -1131,13 +1132,13 @@ class ServiceViewTestCase(TestCase):
 
     def test_03_service_rendering(self):
         """Tests that the service view is rendered successfully and the correct template is used."""
-        response = self.client.get(reverse('service', args=(self.service.id,)))
+        response = self.client.get(reverse('service', args=(self.service.slug,)))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'service.html')
 
     def test_04_service_is_displayed(self):
         """Tests that the service is indeed displayed successfully in the Service view."""
-        response = self.client.get(reverse('service', args=(self.service.id,)))
+        response = self.client.get(reverse('service', args=(self.service.slug,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
         pattern = r'<p class="service_name">(.*)Service name EN(.*)</p>'
@@ -1146,7 +1147,7 @@ class ServiceViewTestCase(TestCase):
 
     def test_05_booking_is_disabled_when_not_logged_in(self):
         """Tests that the booking option is not available for users not logged in."""
-        response = self.client.get(reverse('service', args=(self.service.id,)))
+        response = self.client.get(reverse('service', args=(self.service.slug,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
         pattern = r'<a class="a_button green_button(.*)disabled_button(.*)" href(.*)Book(.*)</a>'
@@ -1156,7 +1157,7 @@ class ServiceViewTestCase(TestCase):
     def test_06_booking_is_enabled_when_logged_in(self):
         """Tests that the booking option is available for users logged in."""
         self._login()
-        response = self.client.get(reverse('service', args=(self.service.id,)))
+        response = self.client.get(reverse('service', args=(self.service.slug,)))
         self.assertContains(response, '<div class="service">')
         html_content = response.content.decode('utf-8')
         pattern = r'<a class="a_button green_button(.*)disabled_button(.*)" href(.*)Book(.*)</a>'
@@ -1168,7 +1169,7 @@ class ServiceViewTestCase(TestCase):
 
     def test_07_default_price_displayed(self):
         """Tests that by default the default price is displayed."""
-        response = self.client.get(reverse('service', args=(self.service.id,)))
+        response = self.client.get(reverse('service', args=(self.service.slug,)))
         html_content = response.content.decode('utf-8')
         pattern = r'<option value="medium" selected >medium</option>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
@@ -1224,7 +1225,7 @@ class ServiceViewTestCase(TestCase):
 
 class AdminAPIViewTestCase(TestCase):
     """
-    Test cases for the Admin API view.
+    Test cases for the Admin view.
     """
 
     def _login(self, admin=True):
@@ -1239,38 +1240,38 @@ class AdminAPIViewTestCase(TestCase):
     def test_01_not_displayed_when_not_staff(self):
         """Tests that the view is not displayed for users that are not staff or admin."""
         self._login(admin=False)
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="menu_item" href="(.*)">Admin API</a>'
+        pattern = r'<a class="menu_item" href="(.*)">Admin</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
 
     def test_02_displayed_when_staff(self):
         """Tests that the view is displayed only when the user is staff or admin."""
         self._login(admin=True)
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a id="nav_admin_api" class="menu_item" href="(.*)">Admin API</a>'
+        pattern = r'<a id="nav_admin_page" class="menu_item" href="(.*)">Admin</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
-    def test_03_admin_api_rendering(self):
-        """Tests that the admin api view is rendered successfully and the correct template is used."""
+    def test_03_admin_page_rendering(self):
+        """Tests that the admin view is rendered successfully and the correct template is used."""
         self._login(admin=True)
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTemplateUsed(response, 'admin_api.html')
+        self.assertTemplateUsed(response, 'admin_page.html')
 
     def test_04_not_displayed_when_not_logged_in(self):
         """Tests that the view is not displayed when the user is not logged in."""
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
 
     def test_05_service_update_destroy_button_disabled_when_no_selected(self):
         """Tests that the Update/Delete button is not enabled until a service is selected from the list."""
         self._login(admin=True)
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         html_content = response.content.decode('utf-8')
         pattern = r'<a id="service_update_delete_button" class="a_button red_button" >(.*)Update/Delete</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
@@ -1279,7 +1280,7 @@ class AdminAPIViewTestCase(TestCase):
     def test_06_list_booking_slots_button_disabled_when_no_selected(self):
         """Tests that the Update/Delete button is not enabled until a service is selected from the list."""
         self._login(admin=True)
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         html_content = response.content.decode('utf-8')
         pattern = r'<a id="available_booking_slots_button" class="a_button blue_button" >(.*)List Available Slots</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
@@ -1288,7 +1289,7 @@ class AdminAPIViewTestCase(TestCase):
     def test_07_cancel_user_button_disabled_when_no_selected(self):
         """Tests that the Cancel User button is not enabled until a user is selected from the list."""
         self._login(admin=True)
-        response = self.client.get(reverse('admin_api'))
+        response = self.client.get(reverse('admin_page'))
         html_content = response.content.decode('utf-8')
         pattern = r'<a id="cancel_user_button" class="a_button red_button" >(.*)Cancel User</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
@@ -1302,7 +1303,7 @@ class AdminAPIViewTestCase(TestCase):
         request.FILES = {'image_to_be_uploaded': 'image'}
         with patch.object(GalleryManager, 'upload_image_to_gallery', return_value=True) as mock_upload_image_to_gallery:
             with patch.object(messages, 'success') as mock_success_message:
-                response = admin_api_page(request)
+                response = admin_page(request)
                 mock_upload_image_to_gallery.assert_called_once()
                 mock_success_message.assert_called_once()
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -1316,7 +1317,7 @@ class AdminAPIViewTestCase(TestCase):
         with patch.object(GalleryManager, 'upload_image_to_gallery', return_value=True) as mock_upload_image_to_gallery:
             with patch.object(messages, 'success') as mock_success_message:
                 with patch('dog_grooming_app.views.render') as mock_render:
-                    response = admin_api_page(request)
+                    response = admin_page(request)
                     mock_upload_image_to_gallery.assert_not_called()
                     mock_success_message.assert_not_called()
                     mock_render.assert_called_once()
@@ -1329,7 +1330,7 @@ class AdminAPIViewTestCase(TestCase):
         with patch.object(GalleryManager, 'delete_image_from_gallery', return_value=None) \
                 as mock_delete_image_from_gallery:
             with patch.object(messages, 'success') as mock_success_message:
-                response = admin_api_page(request)
+                response = admin_page(request)
                 mock_delete_image_from_gallery.assert_called_once()
                 mock_success_message.assert_called_once()
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
@@ -1358,7 +1359,7 @@ class BookingViewTestCase(TestCase):
         self.client.force_login(user=self.admin_user)
         photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
         service_attrs = {
-            'service_name_en': 'Service name EN',
+            'service_name_en': 'Service name EN {}'.format(Service.objects.count()),
             'service_name_hu': 'Service name HU',
             'price_default': 1000,
             'price_small': 750,
@@ -1404,22 +1405,22 @@ class BookingViewTestCase(TestCase):
     def test_01_booking_rendering(self):
         """Tests that the booking view is rendered successfully and the correct template is used."""
         self._login()
-        response = self.client.get(reverse('booking', args=(self.service.id,)))
+        response = self.client.get(reverse('booking', args=(self.service.slug,)))
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTemplateUsed(response, 'booking.html')
 
     def test_02_booking_when_not_logged_in(self):
         """Tests that the booking view is not available for users not logged in."""
         self.client.logout()
-        response = self.client.get(reverse('booking', args=(self.service.id,)))
+        response = self.client.get(reverse('booking', args=(self.service.slug,)))
         self.assertEqual(response.status_code, status.HTTP_302_FOUND)
-        self.assertRedirects(response, reverse('login') + '?next=' + reverse('booking', args=(self.service.id,)))
+        self.assertRedirects(response, reverse('login') + '?next=' + reverse('booking', args=(self.service.slug,)))
 
     def test_03_booking_not_available_without_comment(self):
         """Tests that the booking is not available without a comment."""
         self._login()
-        self.client.get(reverse('booking', args=(self.service.id,)))
-        response = self.client.post(reverse('booking', args=(self.service.id,)),
+        self.client.get(reverse('booking', args=(self.service.slug,)))
+        response = self.client.post(reverse('booking', args=(self.service.slug,)),
                                     {'dog_size': 'medium',
                                      'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
                                                                     '%Y-%m-%d'),
@@ -1432,8 +1433,8 @@ class BookingViewTestCase(TestCase):
     def test_04_booking_not_available_without_time(self):
         """Tests that the booking is not available without a valid time."""
         self._login()
-        self.client.get(reverse('booking', args=(self.service.id,)))
-        response = self.client.post(reverse('booking', args=(self.service.id,)),
+        self.client.get(reverse('booking', args=(self.service.slug,)))
+        response = self.client.post(reverse('booking', args=(self.service.slug,)),
                                     {'dog_size': 'medium',
                                      'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
                                                                     '%Y-%m-%d'),
@@ -1446,8 +1447,8 @@ class BookingViewTestCase(TestCase):
     def test_05_successful_booking_with_message(self):
         """Tests that when the booking is successful, the correct success message is displayed."""
         self._login()
-        self.client.get(reverse('booking', args=(self.service.id,)))
-        response = self.client.post(reverse('booking', args=(self.service.id,)),
+        self.client.get(reverse('booking', args=(self.service.slug,)))
+        response = self.client.post(reverse('booking', args=(self.service.slug,)),
                                     {'dog_size': '',
                                      'date': datetime.date.strftime(datetime.date.today() + datetime.timedelta(days=1),
                                                                     '%Y-%m-%d'),
@@ -1482,7 +1483,7 @@ class UserBookingsViewTestCase(TestCase):
         self.client.force_login(user=self.admin_user)
         photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
         service_attrs = {
-            'service_name_en': 'Service name EN',
+            'service_name_en': 'Service name EN {}'.format(Service.objects.count()),
             'service_name_hu': 'Service name HU',
             'price_default': 1000,
             'price_small': 750,
@@ -1569,7 +1570,7 @@ class UserBookingsViewTestCase(TestCase):
         self._login()
         response = self.client.get(reverse('user_bookings'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        pattern = r'<a class="a_button red_button" onclick="return confirmCancel\((.*)\)\;" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -1668,7 +1669,7 @@ class AdminBookingsViewTestCase(TestCase):
         self._login(admin=True)
         photo_path = os.path.join(settings.MEDIA_ROOT, 'services', 'default.jpg')
         service_attrs = {
-            'service_name_en': 'Service name EN',
+            'service_name_en': 'Service name EN {}'.format(Service.objects.count()),
             'service_name_hu': 'Service name HU',
             'price_default': 1000,
             'price_small': 750,
@@ -1771,7 +1772,7 @@ class AdminBookingsViewTestCase(TestCase):
         self._login()
         response = self.client.get(reverse('admin_bookings'))
         html_content = response.content.decode('utf-8')
-        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        pattern = r'<a class="a_button red_button" onclick="return confirmCancel\((.*)\)\;" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -1819,7 +1820,7 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<p style="color:red;">Cancelled</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
-        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        pattern = r'<a class="a_button red_button" onclick="return confirmCancel\((.*)\)\;" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -1833,7 +1834,7 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<p style="color:red;">Cancelled</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNone(match)
-        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        pattern = r'<a class="a_button red_button" onclick="return confirmCancel\((.*)\)\;" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -1854,7 +1855,7 @@ class AdminBookingsViewTestCase(TestCase):
         pattern = r'<p style="color:red;">Cancelled</p>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
-        pattern = r'<a class="a_button red_button" href(.*)>Cancel</a>'
+        pattern = r'<a class="a_button red_button" onclick="return confirmCancel\((.*)\)\;" href(.*)>Cancel</a>'
         match = re.search(pattern, html_content, re.DOTALL | re.IGNORECASE)
         self.assertIsNotNone(match)
 
@@ -2045,6 +2046,7 @@ class ModelsTestCase(TestCase):
                     service.id = 1
                     service.photo = Mock()
                     service.photo.name = None
+                    service.slug = 'slug'
                     with patch.object(models.Model, 'save', return_value=None):
                         service.save()
                     Service.objects.get.assert_called_once()

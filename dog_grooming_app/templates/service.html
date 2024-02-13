@@ -52,7 +52,7 @@
             {% endblocktranslate %}
         </p>
         <div class="service_buttons">
-            <a class="a_button green_button {% if not user.is_authenticated %}disabled_button{% endif %}" href="{% url 'booking' service_id=service.id %}">
+            <a class="a_button green_button {% if not user.is_authenticated %}disabled_button{% endif %}" href="{% url 'booking' slug=service.slug %}">
                 {% trans 'Book' %}
             </a>
             <a class="a_button grey_button" href="{% url 'services' %}">{% trans 'Back' %}</a>

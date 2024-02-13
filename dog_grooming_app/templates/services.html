@@ -12,7 +12,7 @@
     {% for service in services %}
 
     <div class="service_box">
-        <a href="{% url 'service' service_id=service.id %}"><span>
+        <a href="{% url 'service' slug=service.slug %}"><span>
             <img class="service_box_image"
                  src="
                     {% if service.photo.url is not None and service.photo.url != '' %}

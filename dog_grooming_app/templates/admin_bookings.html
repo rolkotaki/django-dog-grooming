@@ -10,12 +10,13 @@
 <div id="admin_booking_search_form">
     <form method="POST" novalidate>
         {% csrf_token %}
+        <label for="booking_date">{% trans 'From:' %}</label>
         <input name="booking_date" id="booking_date" type="date" value="{{ day }}" />
         <input name="user" id="user" type="text" placeholder="{% trans 'name, username or id' %}" value="{{ user_filter }}" />
         <label for="cancelled">{% trans 'Cancelled:' %}</label>
         <input name="cancelled" id="cancelled" type="checkbox" value="cancelled" {% if cancelled %} checked {% endif %}/>
         <input name="submit_search" type="submit" value="{% trans 'Search' %}"/>
-        <input name="submit_all" type="submit" value="{% trans 'All' %}" />
+        <input name="submit_all" type="submit" value="{% if day or user_filter  %}{% trans 'Reset' %}{% else %}{% trans 'All' %}{% endif %}" />
     </form>
 </div>
 
@@ -54,7 +55,7 @@
         <p>{{ booking.user.username}}</p>
         {% if not booking.cancelled %}
             {% if booking.date > date or booking.date == date and booking.time >= time  %}
-            <a class="a_button red_button" href="{% url 'api_cancel_booking' booking_id=booking.id %}?by_user=false">{% trans 'Cancel' %}</a>
+            <a class="a_button red_button" onclick="return confirmCancel('{% trans 'Are you sure you want to cancel this booking?' %}');" href="{% url 'api_cancel_booking' booking_id=booking.id %}?by_user=false">{% trans 'Cancel' %}</a>
             {% endif %}
         {% else %}
             <p style="color:red;">{% trans 'Cancelled' %}</p>

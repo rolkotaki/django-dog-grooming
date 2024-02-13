@@ -53,7 +53,7 @@
                 <a id="nav_gallery" class="menu_item" href="{% url 'gallery' %}">{% trans 'Gallery' %}</a>
                 <a id="nav_contact" class="menu_item" href="{% url 'contact' %}">{% trans 'Contact' %}</a>
                 {% if user.is_authenticated and user.is_staff %}
-                    <a id="nav_admin_api" class="menu_item" href="{% url 'admin_api' %}">{% trans 'Admin API' %}</a>
+                    <a id="nav_admin_page" class="menu_item" href="{% url 'admin_page' %}">{% trans 'Admin' %}</a>
                 {% endif %}
                 {% if user.is_authenticated %}
                 <div id="user_dropdown" class="menu_item_right">
