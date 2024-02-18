@@ -12,11 +12,11 @@ from django.utils.text import slugify
 from typing import Tuple
 import threading
 
-from .constants import PHONE_NUMBER_VALIDATOR, BREAK, BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_ADMIN, \
+from dog_grooming_app.utils.constants import PHONE_NUMBER_VALIDATOR, BREAK, BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_ADMIN, \
     BOOKING_CANCELLATION_EMAIL_SUBJECT_TO_USER, USER_CANCELLATION_EMAIL_SUBJECT, USER_REGISTRATION_EMAIL_SUBJECT, \
     CALLBACK_EMAIL_SUBJECT
 from dog_grooming_salon.utils import DogGroomingEmail
-from .tokens import account_activation_token
+from dog_grooming_app.utils.AccountActivationTokenGenerator import account_activation_token
 from dog_grooming_salon.logger import logger
 
 

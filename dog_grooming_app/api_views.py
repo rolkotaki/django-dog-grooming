@@ -20,7 +20,7 @@ from rest_framework import status
 from .serializers import ContactSerializer, ServiceSerializer, ServiceUpdateDeleteSerializer, BookingCreateSerializer, \
     BookingSerializer, CustomUserSerializer
 from .models import Contact, Service, Booking, CustomUser
-from .utils import BookingManager
+from dog_grooming_app.utils.BookingManager import BookingManager
 from dog_grooming_salon.logger import logger
 
 

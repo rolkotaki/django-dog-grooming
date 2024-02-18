@@ -4,7 +4,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.validators import RegexValidator
 
 from .models import CustomUser, Booking
-from .constants import PHONE_NUMBER_VALIDATOR
+from dog_grooming_app.utils.constants import PHONE_NUMBER_VALIDATOR
 
 
 class LoginForm(forms.Form):

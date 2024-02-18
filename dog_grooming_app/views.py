@@ -16,12 +16,13 @@ from django.utils.translation import gettext_lazy as _
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
 
+from dog_grooming_salon.logger import logger
+from dog_grooming_app.utils.GalleryManager import GalleryManager
+from dog_grooming_app.utils.BookingManager import BookingManager
+from dog_grooming_app.utils.AccountActivationTokenGenerator import account_activation_token
+from dog_grooming_app.utils.constants import PAGINATION_PAGES, SERVICES_PER_PAGE, BOOKINGS_PER_PAGE, GALLERY_IMAGES_PER_PAGE
 from .forms import SignUpForm, LoginForm, PersonalDataForm, BookingForm
 from .models import Contact, Service, CustomUser, Booking
-from .utils import GalleryManager, BookingManager
-from .tokens import account_activation_token
-from .constants import PAGINATION_PAGES, SERVICES_PER_PAGE, BOOKINGS_PER_PAGE, GALLERY_IMAGES_PER_PAGE
-from dog_grooming_salon.logger import logger
 
 
 class HomePage(TemplateView):
